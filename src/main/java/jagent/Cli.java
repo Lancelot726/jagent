@@ -4,6 +4,7 @@ import jagent.agent.Agent;
 import jagent.agent.Auction;
 import jagent.agent.Budget;
 import jagent.agent.Governor;
+import jagent.agent.Scorecard;
 import jagent.agent.SpawnTool;
 import jagent.core.Bus;
 import jagent.graph.Admission;
@@ -79,14 +80,34 @@ public final class Cli {
         }
     }
 
+    private static boolean badCfg(Config cfg, Lang L) {
+        if (cfg.isMock()) return false;
+        StringBuilder miss = new StringBuilder();
+        add(miss, cfg.baseUrl, "base-url");
+        add(miss, cfg.apiKey, "api-key");
+        if (miss.length() == 0) return false;
+        Term.err.println(L.t("err.nocfg", miss));
+        return true;
+    }
+
+    private static void add(StringBuilder sb, String v, String name) {
+        if (v != null && !v.isBlank()) return;
+        if (sb.length() > 0) sb.append(", ");
+        sb.append(name);
+    }
+
     private static ChatClient client(Config cfg) {
-        return client(cfg, cfg.model);
+        return client(cfg, cfg.baseUrl, cfg.apiKey, cfg.model);
     }
 
     private static ChatClient client(Config cfg, String model) {
+        return client(cfg, cfg.baseUrl, cfg.apiKey, model);
+    }
+
+    private static ChatClient client(Config cfg, String baseUrl, String apiKey, String model) {
         return cfg.isMock()
                 ? new MockClient(model)
-                : new OpenAiClient(cfg.baseUrl, cfg.apiKey, model, 120);
+                : new OpenAiClient(baseUrl, apiKey, model, 120);
     }
 
     private static int chat(Config cfg, List<String> rest) throws Exception {
@@ -95,6 +116,7 @@ public final class Cli {
             Term.err.println("chat: " + cfg.lang.t("opt.lang"));
             return 2;
         }
+        if (badCfg(cfg, cfg.lang)) return 2;
         ChatClient cl = client(cfg);
         List<Message> msgs = new ArrayList<>();
         msgs.add(Message.system(cfg.systemPrompt()));
@@ -105,6 +127,7 @@ public final class Cli {
         Turn t = cl.stream(msgs, List.of(), d -> {
             switch (d) {
                 case Delta.Text x -> Term.out.print(x.s());
+                case Delta.Reasoning r -> Term.out.print(Ansi.GRAY + r.s() + Ansi.RESET);
                 case Delta.ToolStart ts -> {
                     Term.out.println();
                     Term.out.println(Ansi.CYAN + "  tool# " + ts.index() + " " + ts.name() + Ansi.RESET);
@@ -131,8 +154,11 @@ public final class Cli {
             Term.err.println(L.t("run.usage"));
             return 2;
         }
+        if (badCfg(cfg, L)) return 2;
         ChatClient cheap = client(cfg);
-        ChatClient strong = cfg.modelStrong.isBlank() ? cheap : client(cfg, cfg.modelStrong);
+        ChatClient strong = cfg.hasStrong()
+                ? client(cfg, cfg.strongBaseUrl(), cfg.strongApiKey(), cfg.modelStrong)
+                : cheap;
 
         Bus bus = new Bus();
         Graph graph = new Graph(bus);
@@ -142,9 +168,10 @@ public final class Cli {
         sched.latencyMs(cfg.toolDelayMs);
         Auction auction = new Auction();
         Budget budget = new Budget(cfg.budget);
-        Router router = new Router(
-                new FallbackClient(cheap, strong, gov, 2),
-                new FallbackClient(strong, cheap, gov, 2));
+        FallbackClient cheapFb = new FallbackClient(cheap, strong, gov, 2);
+        FallbackClient strongFb = new FallbackClient(strong, cheap, gov, 2);
+        Router router = new Router(cheapFb, strongFb);
+        Scorecard score = new Scorecard(auction, budget, gov, adm, graph, cheapFb, strongFb, L);
 
         Memory mem = new Memory(work);
 
@@ -180,6 +207,7 @@ public final class Cli {
                     }
 
                     public void onCompress(int step, long before, long after, String reason) {
+                        score.onCompress(before, after);
                         dash.log(Ansi.YELLOW + "  " + L.t("run.compress", before, after) + Ansi.RESET
                                 + " " + Ansi.GRAY + reason + Ansi.RESET);
                     }
@@ -232,6 +260,14 @@ public final class Cli {
                         + Ansi.RESET);
             } catch (Exception ignore) {
             }
+            dash.log("");
+            for (String line : score.lines()) dash.log(Ansi.BLUE + "  " + line + Ansi.RESET);
+            try {
+                score.save(work.path(WorkDir.SCORECARD));
+                dash.log(Ansi.GRAY + "  " + L.t("score.saved", work.path(WorkDir.SCORECARD).toString())
+                        + Ansi.RESET);
+            } catch (Exception ignore) {
+            }
             sched.close();
             dash.close();
             bus.close();
@@ -258,10 +294,20 @@ public final class Cli {
         row(L.t("col.provider"), cfg.provider + (cfg.isMock() ? "  " + L.t("mock.note") : ""));
         row(L.t("col.userlang"), L.code() + " / " + L.tag());
         if (!cfg.isMock()) {
-            row(L.t("col.baseurl"), cfg.baseUrl);
-            row(L.t("col.model"), cfg.model);
-            row(L.t("col.apikey"), cfg.apiKey.isEmpty()
+            row(L.t("col.tier.cheap"), cfg.baseUrl.isBlank()
+                    ? L.t("key.unset") : cfg.baseUrl + "  " + cfg.model);
+            row(L.t("col.key.cheap"), cfg.apiKey.isEmpty()
                     ? L.t("key.unset") : L.t("key.set", cfg.apiKey.length()));
+            row(L.t("col.tier.strong"), cfg.hasStrong()
+                    ? cfg.strongBaseUrl() + "  " + cfg.modelStrong
+                    : L.t("tier.same"));
+            row(L.t("col.key.strong"), cfg.hasStrong()
+                    ? (cfg.strongApiKey().isEmpty()
+                            ? L.t("key.unset") : L.t("key.set", cfg.strongApiKey().length()))
+                    : L.t("tier.same"));
+            if (cfg.hasStrong() && cfg.strongBaseUrl().equals(cfg.baseUrl)) {
+                Term.out.println(Ansi.YELLOW + "  " + L.t("tier.sameSrc") + Ansi.RESET);
+            }
         }
         Term.out.println();
         Term.out.print("  " + L.t("probe.utf8") + "  ");
@@ -295,6 +341,8 @@ public final class Cli {
         Term.out.println("  --api-key <key>           " + L.t("opt.apikey"));
         Term.out.println("  --model <name>            " + L.t("opt.model"));
         Term.out.println("  --model-strong <name>     " + L.t("opt.modelstrong"));
+        Term.out.println("  --base-url-strong <url>   " + L.t("opt.baseurlstrong"));
+        Term.out.println("  --api-key-strong <key>    " + L.t("opt.apikeystrong"));
         Term.out.println("  --budget <tokens>         " + L.t("opt.budget"));
         Term.out.println("  --compress-after <tokens> " + L.t("opt.compress"));
         Term.out.println("  --resume                  " + L.t("opt.resume"));

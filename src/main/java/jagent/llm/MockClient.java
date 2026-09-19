@@ -114,7 +114,7 @@ public final class MockClient implements ChatClient {
 
         long in = est(messages);
         long out = say.length() + calls.stream().mapToLong(c -> c.args().length()).sum();
-        return new Turn(say, calls, calls.isEmpty() ? "stop" : "tool_calls", in, Math.max(1, out / 3));
+        return new Turn(say, calls, calls.isEmpty() ? "stop" : "tool_calls", in, Math.max(1, out / 3), null);
     }
 
     @Override

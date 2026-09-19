@@ -14,6 +14,9 @@ public final class Governor implements Health {
     private final double target;
     private final AtomicInteger consecFail = new AtomicInteger();
     private final AtomicInteger tripAt;
+    private final AtomicInteger ups = new AtomicInteger();
+    private final AtomicInteger downs = new AtomicInteger();
+    private final AtomicInteger trips = new AtomicInteger();
     private volatile double errEma;
     private volatile boolean open;
     private volatile String lastAction = "";
@@ -39,6 +42,7 @@ public final class Governor implements Health {
     @Override
     public void fail() {
         int n = consecFail.incrementAndGet();
+        if (n >= tripAt.get() && !open) trips.incrementAndGet();
         if (n >= tripAt.get()) open = true;
         tick(false);
     }
@@ -60,9 +64,14 @@ public final class Governor implements Health {
         if (Math.abs(error) < 0.05) return;
         int want = (int) Math.round(adm.limit() - 8.0 * error);
         want = Math.max(min, Math.min(max, want));
-        if (want != adm.limit()) {
-            lastAction = (adm.limit() > want ? "down " : "up ") + adm.limit() + "->" + want;
+        int before = adm.limit();
+        if (want != before) {
             adm.setLimit(want);
+            int after = adm.limit();
+            if (after == before) return;
+            if (after < before) downs.incrementAndGet();
+            else ups.incrementAndGet();
+            lastAction = (after < before ? "down " : "up ") + before + "->" + after;
         }
     }
 
@@ -78,6 +87,12 @@ public final class Governor implements Health {
     public int permits() { return adm.limit(); }
 
     public String lastAction() { return lastAction; }
+
+    public int ups() { return ups.get(); }
+
+    public int downs() { return downs.get(); }
+
+    public int trips() { return trips.get(); }
 
     public double valueScale() {
         return 0.85 + 1.5 * errEma;

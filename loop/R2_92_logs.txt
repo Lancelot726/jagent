@@ -1,0 +1,53 @@
+[2026-09-19] init: 建 R2 — 仅建记录/流程文件，未建产出文件
+[2026-09-19] S0: 收件 作者口头要求 -> R2_00_req_product.in.txt (只读)；性质=范围推进(接真实模型)，非回溯
+[2026-09-19] S0: 作者已删除 CLAUDE.md(暂时) — 其语言条款硬编码 Zh，与宪法 #5 冲突；删除即消除冲突，写入 R2_90 修订 4
+[2026-09-19] S1: 重读宪法(R1_90) — 采"修订页"而非整份复制，避免两份口径互相矛盾；R2_90 只登记 4 条修订
+[2026-09-19] G1: 口径确认 — 范围仅"双模型接入+拍卖验证"，R1 预设 R2 项全部推迟；第二厂商由作者自定；产品须厂商无关(#7)；密钥由作者写 work/jagent.properties
+[2026-09-19] S1: 查明阻塞点 — Cli.java:86-90 客户端工厂对两档共用 baseUrl+apiKey；Config.java:77 只有 model-strong -> 现状只能"同厂商两模型名"竞价，做不了"两厂商"，需增强档地址/密钥
+[2026-09-19] S1: 建 R2_10(任务书)/R2_91(进度图)/R2_92(本文件)/R2_94(台账)；R2_93 不预建，待 G4 定稿
+[2026-09-19] S3: 架构定案 — 两档各自持有 (baseUrl, apiKey, model)；留空回退廉价档，保持 R1 行为不破
+[2026-09-19] S4/P0: Config 增 baseUrlStrong/apiKeyStrong 字段+构造+load 解析；新增 strongBaseUrl()/strongApiKey()/hasStrong()
+[2026-09-19] S4/P0: base-url 默认由 https://api.openai.com/v1 改为 "" — 落实宪法 #7 厂商无关；model 默认保留(离线展示标签)
+[2026-09-19] S4/P1: Cli.client() 三参重载(按档取 url/key/model)；run() 强力档改用 cfg.strongBaseUrl()/strongApiKey()
+[2026-09-19] S4/P2: 新增 badCfg() 前置校验 — 非 mock 且 url/key 缺失时立即报错并列出缺失项，不再等到 API 调用才失败
+[2026-09-19] S4/P3: doctor 旧三行(baseurl/model/apikey)换为 廉价档/廉价档密钥/强力档/强力档密钥 四行 + 同源黄字提示；help 增 --base-url-strong / --api-key-strong
+[2026-09-19] S4/P4: zh/eng 同步增 9 键(opt.baseurlstrong,opt.apikeystrong,col.tier.*,col.key.*,tier.same,tier.sameSrc,err.nocfg)，删 3 死键(col.baseurl/col.model/col.apikey)
+[2026-09-19] S5/P5: 新增 P6T 16 组 79 断言(档位回退/部分配置/空值/属性文件/CLI 覆盖/mock/尾斜杠/键对称/死键清除/厂商名扫描)；P1T..P5T 回归 266 条
+[2026-09-19] S5/P6: mock 自测 — run fanout 端到端 4 步 26 节点通过；--model/--model-strong 双标签 [cheap-x | strong-y] 正确
+[2026-09-19] S5: 构建通过 target/jagent.jar；345 断言全绿(26/27/32/61/120/79)
+[2026-09-19] G2: 待作者写 work/jagent.properties 两档 url/key/model；未投喂前不空等，已用 mock 完成全部可自主部分
+[2026-09-19] S1(口径追加): 作者要求 R2 不止测拍卖, 要"像一个能用的agent"把四组机制全测 -> 退 S1 重建口径(R2_90 修订 2b / R2_10 §2·§3·§8)；R1 外推项仍一项不动
+[2026-09-19] S3: 机制可观测性定案 — 计数在机制类原地累加, 收尾汇总成一块"机制对账", 落盘 work/scorecard.txt；不改变既有判定与打印
+[2026-09-19] S4/P7: Auction 加 wins 计数; Governor 加 ups/downs/trips; Admission 加 peak; FallbackClient 加 fallbacks/retries
+[2026-09-19] S4/P8: 新增 agent.Scorecard(9 行对账, 中英双语); Cli.run 收尾打印并落盘; WorkDir 加 SCORECARD 常量; lang 增 10 键
+[2026-09-19] S5/P9: P7T 109 断言(拍卖计数/翻转/信誉漂移/许可闭环/熔断三连/并发峰值/路径互斥/重试与降级/对账单落盘/中英渲染/键对称)；P1T..P6T 回归 345 条全绿 -> 合计 454
+[2026-09-19] S5 修正: P7T 首跑 1 条偶发红(测试用 ArrayDeque 多线程写, 非产品缺陷) -> 改 AtomicInteger + 有超时 latch, 连跑 3 次稳定 109/0
+[2026-09-19] S5/P10: 建 R2_95_mech_battery.sh 五场景电池(A 基线/B 预算压力/C 压缩ROI/D 控制论/E 故障注入), 输出固化为 R2_50_mech_evidence.wip.txt
+[2026-09-19] S5 发现: 熔断 tripAt=3 与"调用失败即中止整轮 + maxAttempts=2"组合, 使单轮内最多 2 次失败 -> 跨厂商自动切换单轮内无法自然触发；记入 R3 待决
+[2026-09-19] S5 备注: 路径互斥冲突在五场景均为 0(mock 不并发写同一路径), 该机制仅由 P7T 单测覆盖
+[2026-09-20] G2: 作者投喂两档真实配置 -> work/jagent.properties(已 gitignore); 廉价档与强力档分属两家, 厂商名不入仓库任何文件(宪法 #7)
+[2026-09-20] G3: 真厂商最简 agent 跑通(d1) — 3 步 6 节点, 强力档中标, 写文件并读回成功
+[2026-09-20] G3 发现1: 廉价档为思维链模型, 多轮工具回合必须回传 reasoning_content, 客户端丢弃该字段 -> http 400
+[2026-09-20] S5 修复1: OpenAiClient 捕获 delta.reasoning_content; Turn/Message 增 reasoning 分量; toJson 非空才回传 reasoning_content
+[2026-09-20] S5: 实测两厂商均接受该字段(强力档容忍、廉价档必需); P1T 增 4 断言(流式捕获/透传/回传/空值不发) -> 30 条
+[2026-09-20] G3: 预算压力下拍卖真翻转(d2) — 轮1 强力档 0.44/0.51, 轮2 廉价档 0.18/0.15 中标, 轮3 廉价档; 两档各自真实执行工具调用
+[2026-09-20] G3 发现2: 单许可下并发子 agent 进程挂死; 裸 jstack 无虚拟线程栈 -> jcmd Thread.dump_to_file 定位 Admission.setLimit 阻塞
+[2026-09-20] S5 修复2: setLimit 改非阻塞 — 降额只回收当前可用许可, 不再 acquireUninterruptibly 等被自身持有的许可; ups/downs 只记实际变化
+[2026-09-20] G3 发现3: 修完仍挂死 -> 更根本的嵌套许可死锁: 持有许可的 spawn_agent 任务在等需要许可的子 agent 工具调用
+[2026-09-20] S5 修复3: Scheduler 引入 admitted ThreadLocal, 许可只约束顶层提交, 嵌套提交不再重复申请 -> 破除环
+[2026-09-20] G3: 并发场景跑通(d3) — 6 步 37 节点(完成 31 / 失败 6); 两子 agent 并行产出; 峰值 2, 上调 9 下调 3 熔断 1, 降级 12 重试 2
+[2026-09-20] G3: 压缩场景跑通(d4) — 1 次压缩省 211 tok, ROI 1743.5x
+[2026-09-20] S5: 全量断言 458 全绿(P1T 30/P2T 27/P3T 32/P4T 61/P5T 120/P6T 79/P7T 109)
+[2026-09-20] G3 备注: d3 中两子 agent 共享同一工作区, 互相读到对方文件 -> 子 agent 产出独立性不成立, 记入 R3
+[2026-09-20] S5: mock 电池重跑复现全部结论(A 10:0 / B 5:5 / C 压缩3次省518 / D 上调7 / E 熔断+信誉0.75)
+[2026-09-20] S5 语义变更: 嵌套许可修复后"并发峰值"只统计顶层提交(嵌套子 agent 的工具调用不再计入) -> mock D 峰值 6 降为 2; 机制本身(上调/下调/熔断)不受影响
+[2026-09-20] S5: 证据件固化 — R2_51_real_vendor_evidence.wip.txt(真实厂商 d1-d5) / R2_50_mech_evidence.wip.txt(mock 电池, 已刷新)
+[2026-09-20] S5: 证据件隐私扫描 — 剔除含模型名的头部行, 全库 loop/ 无厂商名/地址/密钥
+[2026-09-20] G3(第二回): 作者本机终端复核 d1-d5 — 执行图与机制对账块观感通过; 同时提四项新意见
+[2026-09-20] G3 反馈1: 节点摘要显示不全 — Agent.summarize 先截 60, GraphView.clip 再截 48 -> 末句被切
+[2026-09-20] G3 反馈2: chat 推理增量与答案增量均只 print 无换行 -> 灰色思维链和答案黏在同一行
+[2026-09-20] G3 反馈3: 无 REPL 输入界面 — 本项即 R1 宪法 §5 明确推迟的"终端 raw mode 行编辑"
+[2026-09-20] G3 反馈4: 机制标签带学科色彩(竞价/拍卖/信誉/利润/预算/控制论等) — 该批标签宜置于 L1 而非随用户语言变的 L2
+[2026-09-20] G4: 作者拍板冻结 R2 — 四项新意见经裁定不并入本轮, 整体转 R3; R2 保持首回送审时的形态
+[2026-09-20] S7: 定稿 — 建 R2_93_frozen.md, 交付基线提交 __BASELINE__
+[2026-09-20] S8: 归档 — R2_91/92/94 回填 G4

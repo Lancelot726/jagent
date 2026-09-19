@@ -12,6 +12,7 @@ public final class WorkDir {
     public static final String SUMMARY = "summary.md";
     public static final String EPISODES = "episodes.log";
     public static final String ARTIFACTS = "artifacts";
+    public static final String SCORECARD = "scorecard.txt";
 
     private final Path root;
 

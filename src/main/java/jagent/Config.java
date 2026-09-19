@@ -31,13 +31,16 @@ public final class Config {
     public final long toolDelayMs;
     public final boolean graph;
     public final String modelStrong;
+    public final String baseUrlStrong;
+    public final String apiKeyStrong;
     public final long budget;
     public final long compressThreshold;
     public final boolean resume;
 
     private Config(String provider, String baseUrl, String apiKey, String model, Lang lang,
                    Path cwd, int width, int height, int permits, long toolDelayMs, boolean graph,
-                   String modelStrong, long budget, long compressThreshold, boolean resume) {
+                   String modelStrong, String baseUrlStrong, String apiKeyStrong,
+                   long budget, long compressThreshold, boolean resume) {
         this.provider = provider;
         this.baseUrl = baseUrl;
         this.apiKey = apiKey;
@@ -50,12 +53,20 @@ public final class Config {
         this.toolDelayMs = toolDelayMs;
         this.graph = graph;
         this.modelStrong = modelStrong;
+        this.baseUrlStrong = baseUrlStrong;
+        this.apiKeyStrong = apiKeyStrong;
         this.budget = budget;
         this.compressThreshold = compressThreshold;
         this.resume = resume;
     }
 
     public boolean isMock() { return "mock".equals(provider); }
+
+    public String strongBaseUrl() { return baseUrlStrong.isBlank() ? baseUrl : baseUrlStrong; }
+
+    public String strongApiKey() { return apiKeyStrong.isBlank() ? apiKey : apiKeyStrong; }
+
+    public boolean hasStrong() { return !modelStrong.isBlank(); }
 
     public static Config load(Map<String, String> cli) {
         Path cwd = Path.of(cli.getOrDefault("cwd", System.getProperty("user.dir")))
@@ -64,7 +75,7 @@ public final class Config {
         int[] term = Term.size();
         return new Config(
                 pick(cli, p, "provider", "JAGENT_PROVIDER", "mock"),
-                pick(cli, p, "base-url", "JAGENT_BASE_URL", "https://api.openai.com/v1"),
+                pick(cli, p, "base-url", "JAGENT_BASE_URL", ""),
                 pick(cli, p, "api-key", "JAGENT_API_KEY", ""),
                 pick(cli, p, "model", "JAGENT_MODEL", "gpt-4o-mini"),
                 resolveLang(cli, p, cwd),
@@ -75,6 +86,8 @@ public final class Config {
                 intPick(cli, p, "tool-delay", "JAGENT_TOOL_DELAY", 0),
                 !flag(cli, p, "no-graph", "JAGENT_NO_GRAPH"),
                 pick(cli, p, "model-strong", "JAGENT_MODEL_STRONG", ""),
+                pick(cli, p, "base-url-strong", "JAGENT_BASE_URL_STRONG", ""),
+                pick(cli, p, "api-key-strong", "JAGENT_API_KEY_STRONG", ""),
                 longPick(cli, p, "budget", "JAGENT_BUDGET", 40_000),
                 longPick(cli, p, "compress-after", "JAGENT_COMPRESS_AFTER", 6_000),
                 flag(cli, p, "resume", "JAGENT_RESUME"));

@@ -145,7 +145,7 @@ public final class Agent {
             outTokens += t.outTokens();
             graph.tokens(t.inTokens(), t.outTokens());
             if (budget != null) budget.charge(t.inTokens(), t.outTokens());
-            convo.add(Message.assistant(t.content(), t.toolCalls()));
+            convo.add(Message.assistant(t.content(), t.toolCalls(), t.reasoning()));
 
             if (mem != null) mem.episode(step, "assistant", t.content());
 

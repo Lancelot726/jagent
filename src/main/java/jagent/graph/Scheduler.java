@@ -10,6 +10,7 @@ import java.util.concurrent.Future;
 public final class Scheduler implements AutoCloseable {
 
     private final ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor();
+    private final ThreadLocal<Boolean> admitted = ThreadLocal.withInitial(() -> Boolean.FALSE);
     private final Graph graph;
     private final Admission adm;
     private volatile long latencyMs;
@@ -25,8 +26,10 @@ public final class Scheduler implements AutoCloseable {
 
     public <T> Future<T> submit(String nodeId, Callable<T> work) {
         graph.state(nodeId, NodeState.READY);
+        boolean nested = admitted.get();
         return pool.submit(() -> {
-            adm.acquire();
+            if (!nested) adm.acquire();
+            admitted.set(Boolean.TRUE);
             try {
                 long d = latencyMs;
                 if (d > 0) Thread.sleep(d);
@@ -40,7 +43,7 @@ public final class Scheduler implements AutoCloseable {
                     throw e;
                 }
             } finally {
-                adm.release();
+                if (!nested) adm.release();
             }
         });
     }
