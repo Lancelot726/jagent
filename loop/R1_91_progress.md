@@ -1,6 +1,6 @@
 # 进度 · jagent
 
-状态：R1 进行中 · 当前节点 S7（P0–P5 全部完成，累计 266 断言全绿；交付物四件已建；G3 真终端实跑**通过**；待 G4 拍板定稿与是否发布）
+状态：R1 **已定稿** · 当前节点 S8 归档（P0–P5 全部完成，累计 266 断言全绿；交付物四件已建；G3 真终端实跑通过；G4 拍板=定稿并只建本地仓库，基线提交 `2a1ca57`）
 
 ## 跨轮总览
 
@@ -40,9 +40,8 @@ flowchart TD
     classDef cur fill:#ffd166,stroke:#b8860b
     classDef todo fill:white,stroke:#999,stroke-dasharray:5 5
 
-    class S0,S1,S2,S3,S4,S5,S6 done
-    class S7 cur
-    class S8 todo
+    class S0,S1,S2,S3,S4,S5,S6,S7 done
+    class S8 cur
 ```
 
 ## 闸门
@@ -52,7 +51,7 @@ flowchart TD
 | G1 口径确认 | 名称/依赖/模型/构建/范围 | **已过** |
 | G2 缺料求援 | 需要 OpenAI 兼容服务的 base_url 与 key | 未触发（MockClient 可离线） |
 | G3 人工送审 | 由作者在本机终端实跑 demo | **已过**（原地刷新；树形连接符与状态字形整齐；中文字宽对齐正常。首跑乱码经诊断为控制台代码页 cp936 未切 UTF-8，非产品缺陷） |
-| G4 人工定稿 | 决定是否发 GitHub | **待**（当前闸门） |
+| G4 人工定稿 | 决定是否发 GitHub | **已过**（拍板：定稿并**只建本地仓库**，不推远程；基线 `2a1ca57`，68 文件入库） |
 
 ## 编码阶段进度
 
