@@ -10,8 +10,9 @@
 |---|---|
 | 仓库 | 本地 `jagent`（`git init -b main`），**未设远程** |
 | 分支 | `main` |
-| 首次提交 | `a8761b4` — `R1: runnable demo — pure-JDK zero-dep terminal agent` |
-| 基线提交（tip） | `2a1ca57` — `chore: ignore machine-local Claude Code settings and demo scratch` |
+| **交付基线提交** | `a8761b4` — `R1: runnable demo — pure-JDK zero-dep terminal agent` |
+| 补充提交 | `2a1ca57` — `chore: ignore machine-local Claude Code settings and demo scratch` |
+| 基线内容 | 上述两次提交的并集即为 R1 定稿内容（68 文件） |
 | 署名 | Lancelot \<higerjoth1@foxmail.com\>（`-c` 临时传入，未写入 git 配置） |
 | 入库文件数 | 68 |
 | 排除 | `target/`、`work/`、`demo-run/`、`.claude/settings.local.json`、`*.class`、`*.jar` |
@@ -29,7 +30,11 @@
 **密钥核查**：全库无 `sk-*` 形态字符串、无硬编码 `api_key=`；`.mvn/wrapper/` 仅含
 `maven-wrapper.properties`（无 jar），故 `*.jar` 忽略规则不会打断 wrapper。
 
-**基线只读声明**：以上提交为 R2 的起点。R2 如需改动，一律新开提交，不改写 `2a1ca57`。
+**基线只读声明**：交付基线为 `a8761b4`（`2a1ca57` 为其上的忽略规则修正），二者构成 R2 的起点。
+R2 如需改动，一律新开提交，不改写这两个提交。
+
+> 说明：`loop/90–99` 属滚动活文件，其定稿后的记录更新另行以 meta 提交推进，不影响上述交付基线。
+> 因此不要用「分支 tip」当基线判据 —— 判据是本节列出的两个提交哈希。
 
 ## 本轮实际存在的文件
 
