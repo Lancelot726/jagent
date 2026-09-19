@@ -2,9 +2,34 @@
 
 > 记录已拍板成为下一轮基线的文件及其校验值。`fin` 件从此只读。
 
-## 冻结件
+## 冻结件（R1 定稿，2026-09-19 经作者 G4 拍板）
 
-（无。R1 尚无经人工拍板的定稿件。）
+**基线 = git 提交**（本产品不进轮次命名体系，定稿以提交为凭，哈希即校验值）
+
+| 项 | 值 |
+|---|---|
+| 仓库 | 本地 `jagent`（`git init -b main`），**未设远程** |
+| 分支 | `main` |
+| 首次提交 | `a8761b4` — `R1: runnable demo — pure-JDK zero-dep terminal agent` |
+| 基线提交（tip） | `2a1ca57` — `chore: ignore machine-local Claude Code settings and demo scratch` |
+| 署名 | Lancelot \<higerjoth1@foxmail.com\>（`-c` 临时传入，未写入 git 配置） |
+| 入库文件数 | 68 |
+| 排除 | `target/`、`work/`、`demo-run/`、`.claude/settings.local.json`、`*.class`、`*.jar` |
+
+**交付物校验值（md5）**
+
+| 文件 | md5 |
+|---|---|
+| `README.md` | `ca4100c3d64850e5338ea742c7d52500` |
+| `docs/PROTOCOL.md` | `42507c70a429bb09883c7eb7a5cf8c07` |
+| `docs/DEMO.md` | `a5984a75bee909773c105266bd17c5e4` |
+| `loop/R1_30_design_lang_slots.wip.md` | `4f3638bbbf9d7aa839b2a3e803ca7b51` |
+| `loop/R1_50_bench_startup.wip.md` | `47369a3f6ea1e77599ea13bb260b64b9` |
+
+**密钥核查**：全库无 `sk-*` 形态字符串、无硬编码 `api_key=`；`.mvn/wrapper/` 仅含
+`maven-wrapper.properties`（无 jar），故 `*.jar` 忽略规则不会打断 wrapper。
+
+**基线只读声明**：以上提交为 R2 的起点。R2 如需改动，一律新开提交，不改写 `2a1ca57`。
 
 ## 本轮实际存在的文件
 
@@ -41,13 +66,14 @@
 | `loop/R1_50_bench_startup.wip.md` | 启动耗时与体积基准 | 已建（wip） |
 | `target/t/P5T.java` | P5 断言（不入 git；仅验证用） | 已建，120/120 |
 
-**仍未做**
+**仍未做（全部属 R2）**
 
 | 项 | 说明 |
 |---|---|
-| `.git` 仓库初始化 | 待 G4 拍板通过后执行 |
-| G4 人工定稿 | 决定是否发布；当前闸门 |
+| 发布到远程（GitHub） | G4 拍板为"只建本地仓库"，远程推送**明确不在本轮** |
+| 压缩摘要逐轮累积修复 | 见轮次台账 R2 首批待办 |
+| GraalVM native + RSS 基准 | 见 `R1_50_bench_startup.wip.md` §5 局限 |
 
 G3 真终端实跑已于 2026-09-19 通过（原地刷新 / 字形整齐 / 对齐正常），详见 `R1_94_rounds.md`。
 
-`work/` 为运行时目录，gitignore。仓库尚未 `git init`（待 G4 拍板后执行）。
+`work/`、`target/`、`demo-run/` 均为运行时目录，已 gitignore。

@@ -68,3 +68,9 @@
 [2026-09-19] G3 建议：先 chcp 65001(或 Windows Terminal) 再实跑；留档改用重定向(> out.txt 2>&1) — Term.out 恒为 UTF-8，重定向反而干净且自动关仪表盘
 [2026-09-19] G3 实跑(2/2)：切 UTF-8 后复跑，作者确认 — 底部执行图**原地覆盖刷新**(up(n)+clearDown 生效，非滚动追加)；树形连接符 ├─ └─ │ 与状态字形 ○◐●✗ 整齐正常；中英混排宽度对齐无错位；并发/竞价/压缩/续跑均无异常 -> **G3 通过**
 [2026-09-19] 结论：首跑乱码纯属终端环境(代码页)问题，产品侧零改动，断言基线 266/266 不受影响
+[2026-09-19] S6 送审对账：宪法 §4 六项交付物全部存在(demo jar / README / PROTOCOL / DEMO / 语言槽位设计 / 启动基准)
+[2026-09-19] G4 拍板：**定稿并只建本地仓库**，明确不推远程；git init 随之执行
+[2026-09-19] S7: .gitignore 增排除 demo-run/(G3 运行残留 11 文件, 同 work//target/ 待遇)；增排除 .claude/settings.local.json(Claude Code 每次运行改写权限表, 入库徒增噪声, 已 git rm --cached)
+[2026-09-19] S7: git init -b main; 无全局 git 身份(不写配置), 以 -c 临时传 Lancelot <higerjoth1@foxmail.com>; 提交 a8761b4(R1 交付) + 2a1ca57(gitignore 修正), tip=基线
+[2026-09-19] S7: 密钥核查 — 全库无 sk-* 与硬编码 api_key; .mvn/wrapper 仅 properties 无 jar, *.jar 忽略不打断 wrapper; 入库 68 文件, 残留 0
+[2026-09-19] S7: 交付物 md5 (README ca4100c3 / PROTOCOL 42507c70 / DEMO a5984a75 / R1_30 4f3638bb / R1_50 47369a3f) 已写入 93_frozen
