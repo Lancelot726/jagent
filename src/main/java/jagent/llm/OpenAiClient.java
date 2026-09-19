@@ -84,6 +84,7 @@ public final class OpenAiClient implements ChatClient {
 
         Map<Integer, Acc> acc = new LinkedHashMap<>();
         StringBuilder text = new StringBuilder();
+        StringBuilder reason = new StringBuilder();
         String finish = null;
         long in = 0, out = 0;
 
@@ -105,6 +106,11 @@ public final class OpenAiClient implements ChatClient {
                         if (chunk != null && !chunk.isEmpty()) {
                             text.append(chunk);
                             sink.accept(new Delta.Text(chunk));
+                        }
+                        String rc = d.at("reasoning_content").str(null);
+                        if (rc != null && !rc.isEmpty()) {
+                            reason.append(rc);
+                            sink.accept(new Delta.Reasoning(rc));
                         }
                         Json tcs = d.at("tool_calls");
                         if (tcs != null && !tcs.isNul()) {
@@ -146,7 +152,7 @@ public final class OpenAiClient implements ChatClient {
                     a.args.toString()));
         }
         sink.accept(new Delta.Done(finish == null ? "stop" : finish));
-        return new Turn(text.toString(), calls, finish == null ? "stop" : finish, in, out);
+        return new Turn(text.toString(), calls, finish == null ? "stop" : finish, in, out, reason.toString());
     }
 
     @Override

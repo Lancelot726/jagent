@@ -17,16 +17,21 @@ public final class Auction {
     private static final double[] RATE = {0.15, 0.30};
 
     private final Map<Router.Tier, Double> rep = new EnumMap<>(Router.Tier.class);
+    private final Map<Router.Tier, Integer> wins = new EnumMap<>(Router.Tier.class);
     private double profitTotal;
 
     public Auction() {
         rep.put(Router.Tier.CHEAP, 1.0);
         rep.put(Router.Tier.STRONG, 1.0);
+        wins.put(Router.Tier.CHEAP, 0);
+        wins.put(Router.Tier.STRONG, 0);
     }
 
     public double reputation(Router.Tier t) {
         return rep.getOrDefault(t, 1.0);
     }
+
+    public int wins(Router.Tier t) { return wins.getOrDefault(t, 0); }
 
     public double profitTotal() { return profitTotal; }
 
@@ -44,6 +49,7 @@ public final class Auction {
         double pay = second == Double.NEGATIVE_INFINITY ? best.utility() : second;
         double profit = pay - best.cost();
         profitTotal += profit;
+        wins.merge(best.tier(), 1, Integer::sum);
         return new Award(best.tier(), best.utility(), pay, profit, bids);
     }
 
