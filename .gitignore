@@ -1,6 +1,7 @@
 target/
 work/
 demo-run/
+.claude/settings.local.json
 *.class
 *.jar
 .idea/
