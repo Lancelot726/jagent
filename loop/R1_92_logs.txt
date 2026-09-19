@@ -1,0 +1,70 @@
+[2026-09-19] init: scaffold R1 — 仅建记录/流程文件，未建产出文件
+[2026-09-19] S0: 收件 my_require.txt -> R1_00_req_product.in.txt (只读)
+[2026-09-19] S0: 收件 a_recommended_sys_prompt.md -> R1_03_style_prompt.in.txt (只读)
+[2026-09-19] S0: 03_style_prompt 同步为 src/main/resources/prompt/system.txt (作为常驻系统提示词)
+[2026-09-19] G1: 口径确认 — 名称 jagent / 纯JDK零依赖 / OpenAI兼容 / MavenWrapper预留native / Java25 / demo 四项全选
+[2026-09-19] env: java 25.0.4 有; mvn 无; curl 有; python 3.14 有; git 2.51 有
+[2026-09-19] env: Maven Central 可达(200); GitHub raw 阻断(000) -> wrapper 从 Central 取
+[2026-09-19] S1: 建轮 — 写任务书，范围见 R1_90; 推迟进化论/native/分层布局/raw-mode 至 R2
+[2026-09-19] S2/S3: 调研已合并进方案 — ScopedValue(JEP506)已转正可用; StructuredTaskScope 仍 preview 弃用; GraalVM native-maven-plugin 1.1.14
+[2026-09-19] S4/P0: wrapper 引导(only-script, 从 Central 取 Maven 3.9.16); pom(Java25+jar+native profile); Json/Sse/Ansi/Term/Config/Cli/Main
+[2026-09-19] S4/P0: 构建成功 jar 24444B; doctor 实测 stdout 编码=GBK（方案预判风险已现形）
+[2026-09-19] S4/P0: JSON 自测 19/19 通过
+[2026-09-19] S4/P1: llm 包(ToolCall/Message/Delta/Turn/ChatClient/OpenAiClient/MockClient); chat 子命令
+[2026-09-19] REV: 作者修正 — 提示词 [] 中语言是用户可选项非硬编码; L1 内部固定英文缩略, L2 面向层首启选定 Zh/Eng
+[2026-09-19] S4/P1: Lang 枚举 + lang/{zh,eng}.properties + system.txt 模板化 {{user_lang}} + Config.lang/resolveLang/systemPrompt + --user-lang
+[2026-09-19] S3: 建 R1_30_design_lang_slots.wip.md; 宪法 #5 由"输出中文"改为两层语言模型
+[2026-09-19] S4/P1: 修 Json.at()/idx() 缺失键返回 null 导致流式 NPE -> 改返回 Nul; 构建成功 jar 49689B
+[2026-09-19] S5/P1: P1T 验证 26/26 通过 — SSE 7字节分片跨读边界; 工具参数3段拼接后合并==原文; 未在拼接中 parse; usage 123/45; MockClient 3轮脚本; 模板替换 Zh/Eng
+[2026-09-19] S4/P1: 实测 help(默认zh)/help --user-lang eng 分别中文/英文, doctor 报 user lang: eng / Eng
+[2026-09-19] S4/P2: tool 包(Tool/ToolRegistry/FileTools/BashTool) + agent 包(Agent ReAct + Observer) + run 子命令 + lang 键
+[2026-09-19] S4/P2: 安全约束 — 所有文件工具路径 resolve 后必须 startsWith(workspace root), 越界返回 error 文本
+[2026-09-19] S5/P2: 实测 mock run 3 轮自主完成 write×2 -> read -> 收尾 (in=510 out=62 1050ms)
+[2026-09-19] S5/P2: P2T 验证 27/27 — 6 工具注册/JSON Schema/路径越界拒绝/编辑唯一性/正则报错/bash 退出码/错误回文本不抛异常
+[2026-09-19] S4/P3: core(Event/Bus 同步 SubmissionPublisher) + graph(Node/NodeKind/NodeState/Graph/Snapshot/Admission/Scheduler 虚拟线程) + term(GraphView Unicode 树/Dashboard 唯一写者)
+[2026-09-19] S4/P3: 调度纪律 — K 个 tool_call 先全标 READY 再并行派发; 渲染器只读 Graph.snapshot() 不碰业务对象
+[2026-09-19] S4/P3: Dashboard 用 up(n)+clearDown 滚动重绘底部图块, 非 TTY 自动退化为纯日志
+[2026-09-19] S4/P3: GraphView 增无着色 render(s,lang,false), 供管道输出与断言使用
+[2026-09-19] S5/P3: P3T 验证 32/32 — 两工具 RUNNING 区间重叠 201ms/200ms; 树形连接符 └─ ├─ │ 正确; 结束态字形 ○◌◐●✗; Dashboard live 产 escape 而非 live 不产
+[2026-09-19] S5: 累计 P1T 26 + P2T 27 + P3T 32 = 85 断言全绿
+[2026-09-19] S4/P4: core(Health/RunCtx ScopedValue) + agent(Auction/Budget/Governor/SpawnTool) + llm(Router/FallbackClient)
+[2026-09-19] S4/P4: ScopedValue 承载当前节点 — 工具签名仍是 run(args)，SpawnTool 内 RunCtx.current() 即知父节点，无需透传
+[2026-09-19] S4/P4: Auction 密封报价 utility=V·p−cost，按第二高价记账(Vickrey)；rep EMA 0.75/0.25 夹在 [0.2,1.2] 作为 R2 适应度底料
+[2026-09-19] S4/P4: Governor 积分调节 want=round(limit−8·(errEma−target))，死区 0.05；连续 3 次失败跳闸；退避 120ms·2^n 加抖动
+[2026-09-19] S4/P4: Admission 增写路径锁 — write_file/edit_file 按 path 加锁，两个子 agent 写不同文件可并行、写同一文件被串行化
+[2026-09-19] S5/P4: 实测 mock run 两子 agent 在图上并行分叉（各 230ms 重叠），23 节点；竞价 cheap=0.44 strong=0.51 -> strong (pay 0.44, +0.14)
+[2026-09-19] S5/P4: 实测熔断路径 — base_url 指向死端口: err=49% conc=2->1 跳闸，错误文案 "all 2 attempts failed: ConnectException"
+[2026-09-19] BUG/P4: FileTools.resolve 用未归一化的 root 做 startsWith，相对工作根目录下所有路径被判越界；已改 base=root.toAbsolutePath().normalize()
+[2026-09-19] BUG/P4: FileTools.rel 在 root 相对时 relativize 抛 "'other' is different type of Path" — 表现为"文件已写入却返回 error"；已同法归一化
+[2026-09-19] S5/P4: P4T 验证 61/61 — 竞价/Vickrey/声誉夹取/预算账本/控制律与跳闸/价格锁争用/RunCtx 绑定与绑定后释放/子 agent 落盘
+[2026-09-19] S5: 累计 P1T 26 + P2T 27 + P3T 32 + P4T 61 = 146 断言全绿
+[2026-09-19] S4/P5: mem 包(Tokens 无依赖估算/WorkDir 抽象文件名协议/Memory 事实情节摘要产物/Compressor ROI 判定+定式摘要)
+[2026-09-19] S4/P5: agent/SystemPrompt 分层装配(稳定前缀+goal+memory+node)；tool/MemoryTool(remember/recall/save_artifact/read_artifact) + HumanTool(ask_human 闸门)
+[2026-09-19] S4/P5: Graph.savePlan/planGoal — plan.md 写入 goal/nodes/tokens/步骤；Cli 增 --resume/--compress-after/--budget
+[2026-09-19] S4/P5: 压缩纪律 — 到阈值不算，按 ROI：roundsLeft = 剩余预算/每轮消耗, benefit = rounds×saving, GO iff roi > 1.5
+[2026-09-19] S4/P5: 语言分层落实到资源 — work 文件表头改中性(# facts/# summary)，模型侧 digest 前缀改 L1 英文，用户可见文本全部走 lang/*.properties
+[2026-09-19] S5/P5: 实测 work/ 长出协议文件 artifacts/ episodes.log facts.md plan.md summary.md；plan.md 含 goal/nodes/tokens/steps
+[2026-09-19] BUG/P5: compressThreshold 曾用 Math.max(500,·) 下限，--compress-after 60/150 被静默夹到 500 导致压缩永不触发；改为下限 64
+[2026-09-19] BUG/P5: 压缩清空对话后 MockClient 进度计数归零 → 父 agent 无限重派子 agent。压缩标记携带 folded=N，mock 以 已保留工具数+folded 计进度
+[2026-09-19] S5/P5: 实测压缩触发并打印 ROI 依据 (ctx 673 > 120, 603 rounds x 462 saved vs 319 cost -> ROI 873x)；节点数 80，正常收尾
+[2026-09-19] S5/P5: 实测 --resume 无 task 参数启动，从 work/plan.md 的 goal: 行取回目标并续跑成功
+[2026-09-19] S5/P5: 待补 — P5T 断言（Tokens/WorkDir/Memory/Compressor/savePlan/压缩集成）；README.md 与 docs/PROTOCOL.md、docs/DEMO.md 未建
+[2026-09-19] env: 作者将项目目录 agent -> jagent；全库检索旧绝对路径仅命中 target/maven-status/.../inputFiles.lst（46 行）；删该缓存后重建，新缓存已为 jagent 路径，残留 0
+[2026-09-19] S5: 改名后重验基线 — 构建 OK；P1T 26 + P2T 27 + P3T 32 + P4T 61 = 146 全绿（未受改名影响）
+[2026-09-19] BUG/P5: Memory.rewriteFacts 写死 "# 事实"（同文件 init 却播种 "# facts"）；Compressor.digest 用中文标签注入模型上下文 — 均违宪法 #5（L1 内部固定英文）；已改为 "# facts" 与 goal:/tools:/last:
+[2026-09-19] BUG/P5: 压缩进度标记按"当前对话 tool 消息数"计 folded，二次压缩把累计进度 3 抹回 1 → mock 判据永不收尾 → 空转 16 步 maxSteps 失败（answer=null, failed=1）；改为累计 foldedTotal，进度单调
+[2026-09-19] S5/P5: P5T 落地 target/t/P5T.java，120/120 — token 估算(ascii/宽字符/消息级)、协议件读写与播种、facts 上限 200 淘汰、episodes 只追加与单行截断、artifacts 命名净化与绝对路径拒绝、ROI 判定含 1.5 边界、plan savePlan/planGoal 与换行折行、MemoryTool 四件、HumanTool 无 tty 放行与 HUMAN 节点、压缩集成(fold+summary+plan+resume)
+[2026-09-19] S5: 累计 P1T 26 + P2T 27 + P3T 32 + P4T 61 + P5T 120 = 266 断言全绿
+[2026-09-19] S5: 建 README.md（理念/快速开始/六机制表/架构/硬约定/验证/路线）、docs/PROTOCOL.md（work 抽象文件名协议：布局、格式、生命周期、路径安全、语言分层）、docs/DEMO.md（12 节演示脚本，输出取实跑）
+[2026-09-19] S5: 实测核对 DEMO 依据 — mock run 产出 work/{plan,facts,summary}.md+episodes.log+artifacts；熔断实测 conc=1 err=49% ctl:down 2->1；--resume 从 plan.md goal 续跑成功；help 中/英、doctor 均实测
+[2026-09-19] S5: 建 R1_50_bench_startup.wip.md — jar 131864B(~129KiB, 零第三方依赖)；version/help 冷启动中位 70ms；明确标注 JVM 直跑、无同机对照、未测 RSS 三项局限
+[2026-09-19] NOTE/P5: 已知限制 — Compressor.digest 会并入上一版摘要(Memory.digest 含 summary)，连续多轮压缩使 summary.md 逐轮累积；已写入 PROTOCOL §3.3，留待拍板是否本轮修
+[2026-09-19] S6: 待送审 — G3 需作者在本机真终端实跑（树形连接符/仪表盘/Windows 编码）；G4 决定是否发 GitHub；git init 未做
+[2026-09-19] G3/G4 前置拍板：摘要逐轮累积留 R2 修（不改压缩语义、不重跑断言）；git init 推迟至 G4 通过后
+[2026-09-19] G3 实跑(1/2)：作者在本机 cmd 跑 doctor + run fanout + run fanout --compress-after 64，结果存档 Desktop/测试成果.txt 观感"乱七八糟"
+[2026-09-19] G3 诊断：非程序缺陷 — 控制台代码页 cp936 把程序 UTF-8 字节当 GBK 解 -> 全中文双编码乱码(系统->绯荤粺)；doctor 自身已报 stdout 编码 ms936 / 控制台 GBK 并打印告警，是环境未切 UTF-8
+[2026-09-19] G3 诊断：文档为"选中抄屏"而非重定向 — 无 ESC 字节却残留 1937 处 [0m；live 仪表盘的光标上移/清屏转义在抄写中丢失 -> 217 次重绘全部堆叠(1493 行树) 而非原地刷新
+[2026-09-19] G3 诊断：功能实为成功 — 首跑第 1968 行给出 [步数=4 nodes=26 in=885 out=97 2835ms]；二跑压缩触发(217->33 tok, ROI 2971.9x)；故属"看不了"非"跑不通"
+[2026-09-19] G3 建议：先 chcp 65001(或 Windows Terminal) 再实跑；留档改用重定向(> out.txt 2>&1) — Term.out 恒为 UTF-8，重定向反而干净且自动关仪表盘
+[2026-09-19] G3 实跑(2/2)：切 UTF-8 后复跑，作者确认 — 底部执行图**原地覆盖刷新**(up(n)+clearDown 生效，非滚动追加)；树形连接符 ├─ └─ │ 与状态字形 ○◐●✗ 整齐正常；中英混排宽度对齐无错位；并发/竞价/压缩/续跑均无异常 -> **G3 通过**
+[2026-09-19] 结论：首跑乱码纯属终端环境(代码页)问题，产品侧零改动，断言基线 266/266 不受影响

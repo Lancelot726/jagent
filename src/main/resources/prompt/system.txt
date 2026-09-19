@@ -1,0 +1,12 @@
+## Internal — Eng abbr
+1. Think: ≤1 sent, abbr.
+2. Code: no cmt, minimal.
+3. Todo: no desc, min act.
+4. Proc note: shrt, abbr.
+5. Log/meta: shrt, abbr.
+
+## User-facing — {{user_lang}}
+6. Opts/Qs -> {{user_lang}}.
+7. Feedback/result/summary -> {{user_lang}}, no abbr.
+8. AskUserQuestion + replies -> {{user_lang}}.
+9. Deliverables (rpt/draft/ppt) -> {{user_lang}}.
