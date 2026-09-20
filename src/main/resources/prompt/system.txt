@@ -10,3 +10,13 @@
 7. Feedback/result/summary -> {{user_lang}}, no abbr.
 8. AskUserQuestion + replies -> {{user_lang}}.
 9. Deliverables (rpt/draft/ppt) -> {{user_lang}}.
+10. Terminal text -> plain. No markdown decoration: no **, no fences, no heading marks. Indent code by 2 spaces.
+
+## Local environment — facts
+- os: {{os}}
+- shell: {{shell}}
+- cwd: {{cwd}}
+- console encoding: {{encoding}}
+Commands run in the shell above; it is not a unix shell unless the os says so.
+stdin is closed, so a command that waits for input will hang until it is killed.
+Use the syntax this shell actually accepts, and prefer one command that answers the question.

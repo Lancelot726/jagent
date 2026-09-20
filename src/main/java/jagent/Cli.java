@@ -10,26 +10,29 @@ import jagent.core.Bus;
 import jagent.graph.Admission;
 import jagent.graph.Graph;
 import jagent.graph.Scheduler;
+import jagent.json.Json;
 import jagent.mem.Memory;
 import jagent.mem.WorkDir;
 import jagent.llm.ChatClient;
-import jagent.llm.Delta;
 import jagent.llm.FallbackClient;
 import jagent.llm.Message;
 import jagent.llm.MockClient;
 import jagent.llm.OpenAiClient;
 import jagent.llm.Router;
 import jagent.llm.ToolCall;
-import jagent.llm.Turn;
 import jagent.term.Ansi;
 import jagent.term.Dashboard;
 import jagent.term.Lang;
 import jagent.term.Term;
+import jagent.term.Text;
 import jagent.tool.HumanTool;
 import jagent.tool.MemoryTool;
 import jagent.tool.Tool;
 import jagent.tool.ToolRegistry;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -58,13 +61,13 @@ public final class Cli {
                 pos.add(a);
             }
         }
-        String cmd = pos.isEmpty() ? "help" : pos.get(0);
         Config cfg = Config.load(opt);
         Lang L = cfg.lang;
         try {
+            if (pos.isEmpty()) return repl(cfg);
+            String cmd = pos.get(0);
             return switch (cmd) {
                 case "doctor" -> doctor(cfg);
-                case "chat" -> chat(cfg, pos.subList(1, pos.size()));
                 case "run" -> run(cfg, pos.subList(1, pos.size()));
                 case "version" -> { Term.out.println(Config.APP + " " + Config.VERSION); yield 0; }
                 case "help", "-h" -> help(L);
@@ -100,52 +103,17 @@ public final class Cli {
         return client(cfg, cfg.baseUrl, cfg.apiKey, cfg.model);
     }
 
-    private static ChatClient client(Config cfg, String model) {
-        return client(cfg, cfg.baseUrl, cfg.apiKey, model);
-    }
-
     private static ChatClient client(Config cfg, String baseUrl, String apiKey, String model) {
         return cfg.isMock()
                 ? new MockClient(model)
                 : new OpenAiClient(baseUrl, apiKey, model, 120);
     }
 
-    private static int chat(Config cfg, List<String> rest) throws Exception {
-        String prompt = String.join(" ", rest).trim();
-        if (prompt.isEmpty()) {
-            Term.err.println("chat: " + cfg.lang.t("opt.lang"));
-            return 2;
-        }
-        if (badCfg(cfg, cfg.lang)) return 2;
-        ChatClient cl = client(cfg);
-        List<Message> msgs = new ArrayList<>();
-        msgs.add(Message.system(cfg.systemPrompt()));
-        msgs.add(Message.user(prompt));
-
-        Term.out.println(Ansi.GRAY + "[" + cl.model() + "]" + Ansi.RESET);
-        long t0 = System.nanoTime();
-        Turn t = cl.stream(msgs, List.of(), d -> {
-            switch (d) {
-                case Delta.Text x -> Term.out.print(x.s());
-                case Delta.Reasoning r -> Term.out.print(Ansi.GRAY + r.s() + Ansi.RESET);
-                case Delta.ToolStart ts -> {
-                    Term.out.println();
-                    Term.out.println(Ansi.CYAN + "  tool# " + ts.index() + " " + ts.name() + Ansi.RESET);
-                }
-                case Delta.Done ignored -> { }
-            }
-        });
-        long ms = (System.nanoTime() - t0) / 1_000_000;
-        Term.out.println();
-        for (ToolCall tc : t.toolCalls()) {
-            Term.out.println(Ansi.CYAN + "  args  " + tc.name() + " " + tc.args() + Ansi.RESET);
-        }
-        Term.out.println(Ansi.GRAY + "  [" + t.finishReason() + " in=" + t.inTokens()
-                + " out=" + t.outTokens() + " tools=" + t.toolCalls().size() + " " + ms + "ms]" + Ansi.RESET);
-        return 0;
+    private static int run(Config cfg, List<String> rest) throws Exception {
+        return run(cfg, rest, new ArrayList<>());
     }
 
-    private static int run(Config cfg, List<String> rest) throws Exception {
+    private static int run(Config cfg, List<String> rest, List<Message> transcript) throws Exception {
         Lang L = cfg.lang;
         WorkDir work = new WorkDir(cfg.cwd);
         String task = String.join(" ", rest).trim();
@@ -182,13 +150,15 @@ public final class Cli {
         };
         ToolRegistry tools = factory.apply("root", task);
         tools.add(SpawnTool.create(cfg.cwd, router, graph, sched, auction, budget, gov,
-                cfg.systemPrompt(), factory));
+                cfg.systemPrompt(), factory, cfg.maxSteps));
         tools.add(HumanTool.create(graph));
 
         Dashboard dash = new Dashboard(Term.out, graph, L, cfg.graph && Term.tty());
         dash.attach(bus);
 
-        Agent agent = new Agent(router, tools, graph, sched, cfg.systemPrompt(), dash::stream,
+        Map<String, Integer> toolCount = new LinkedHashMap<>();
+
+        Agent agent = new Agent(router, tools, graph, sched, cfg.systemPrompt(), null,
                 new Agent.Observer() {
                     public void onStep(int step) {
                         dash.log("");
@@ -196,8 +166,9 @@ public final class Cli {
                     }
 
                     public void onToolCall(int step, ToolCall c) {
+                        toolCount.merge(c.name(), 1, Integer::sum);
                         dash.log(Ansi.CYAN + "  " + L.t("run.tool") + " " + c.name() + Ansi.RESET
-                                + " " + Ansi.GRAY + c.args() + Ansi.RESET);
+                                + " " + Ansi.GRAY + argBrief(c.args()) + Ansi.RESET);
                     }
 
                     public void onToolResult(int step, ToolCall c, String result) {
@@ -213,6 +184,7 @@ public final class Cli {
                     }
 
                     public void onBid(int step, Auction.Award a) {
+                        if (!cfg.scorecard) return;
                         StringBuilder sb = new StringBuilder(Ansi.MAGENTA + "  " + L.t("run.bid"));
                         for (Auction.Bid b : a.bids()) {
                             sb.append(' ').append(b.tier().name().toLowerCase())
@@ -224,8 +196,9 @@ public final class Cli {
                                 .append(Ansi.RESET);
                         dash.log(sb.toString());
                     }
-                }, 16, auction, budget, gov, null)
+                }, cfg.maxSteps, auction, budget, gov, null)
                 .memory(mem)
+                .prior(transcript)
                 .compression(true)
                 .compressThreshold(cfg.compressThreshold);
 
@@ -233,45 +206,152 @@ public final class Cli {
                 + router.model(Router.Tier.STRONG) + "]" + Ansi.RESET);
         long t0 = System.nanoTime();
         String answer = null;
-        boolean threw = false;
+        String failure = null;
         try {
             answer = agent.run(task);
         } catch (Exception e) {
-            threw = true;
-            String m = e.getMessage();
-            dash.log(Ansi.RED + "  " + L.t("run.abort", m == null ? e.getClass().getSimpleName() : m)
-                    + Ansi.RESET);
-            throw e;
-        } finally {
+            failure = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+        }
+
+        String outcome = failure != null ? "failed" : (answer == null ? "limit" : "done");
+        try {
+            dash.log("");
+            dash.log(Ansi.GREEN + "  " + L.t("run.answer") + Ansi.RESET);
+            if (failure != null) {
+                dash.log("    " + L.t("run.failed", agent.steps(), shortWhy(failure)));
+                dash.log("    " + L.t("run.hint", hint(L, failure)));
+            } else if (answer == null || answer.isBlank()) {
+                dash.log("    " + L.t("run.limit", agent.steps()));
+            } else {
+                for (String line : Text.plain(answer).split("\n", -1)) dash.log(line);
+            }
+
             long ms = (System.nanoTime() - t0) / 1_000_000;
             dash.log("");
-            if (!threw && answer == null) dash.log(Ansi.YELLOW + "  " + L.t("run.limit", agent.steps()) + Ansi.RESET);
             dash.log(Ansi.GRAY + "  [" + L.t("run.steps") + "=" + agent.steps()
                     + " nodes=" + graph.size() + " in=" + agent.inTokens()
                     + " out=" + agent.outTokens() + " " + ms + "ms]" + Ansi.RESET);
-            dash.log(Ansi.GRAY + "  [" + L.t("run.budget") + " " + budget.spent() + "/" + budget.cap()
-                    + " tok " + L.t("run.credits") + " " + String.format("%.2f", budget.credits())
-                    + " conc=" + gov.permits() + " err=" + String.format("%.0f%%", gov.errorRate() * 100)
-                    + (gov.lastAction().isEmpty() ? "" : " ctl:" + gov.lastAction())
-                    + "]" + Ansi.RESET);
+            if (cfg.scorecard) {
+                dash.log(Ansi.GRAY + "  [" + L.t("run.budget") + " " + budget.spent() + "/" + budget.cap()
+                        + " tok " + L.t("run.credits") + " " + String.format("%.2f", budget.credits())
+                        + " conc=" + gov.permits() + " err=" + String.format("%.0f%%", gov.errorRate() * 100)
+                        + (gov.lastAction().isEmpty() ? "" : " ctl:" + gov.lastAction())
+                        + "]" + Ansi.RESET);
+            }
             try {
                 graph.savePlan(work.path(WorkDir.PLAN), task);
                 dash.log(Ansi.GRAY + "  " + L.t("run.plan", work.path(WorkDir.PLAN).toString())
                         + Ansi.RESET);
             } catch (Exception ignore) {
             }
-            dash.log("");
-            for (String line : score.lines()) dash.log(Ansi.BLUE + "  " + line + Ansi.RESET);
+            if (cfg.scorecard) {
+                dash.log("");
+                for (String line : score.lines()) dash.log(Ansi.BLUE + "  " + line + Ansi.RESET);
+            }
             try {
                 score.save(work.path(WorkDir.SCORECARD));
-                dash.log(Ansi.GRAY + "  " + L.t("score.saved", work.path(WorkDir.SCORECARD).toString())
-                        + Ansi.RESET);
+                if (cfg.scorecard) {
+                    dash.log(Ansi.GRAY + "  " + L.t("score.saved", work.path(WorkDir.SCORECARD).toString())
+                            + Ansi.RESET);
+                }
             } catch (Exception ignore) {
             }
+
+            try {
+                mem.recordRun(recordOf(task, toolCount, agent.steps(), outcome, failure));
+            } catch (Exception ignore) {
+            }
+        } finally {
             sched.close();
             dash.close();
             bus.close();
         }
+
+        if (failure == null && answer != null && !answer.isBlank()) {
+            transcript.add(Message.user(task));
+            transcript.add(Message.assistant(answer, List.of()));
+        }
+        return failure == null ? 0 : 1;
+    }
+
+    private static String argBrief(String args) {
+        String s = args == null ? "" : args.trim();
+        try {
+            Json j = Json.parse(s);
+            for (String k : new String[]{"path", "command", "task", "pattern", "name", "url"}) {
+                String v = j.at(k).str("");
+                if (!v.isBlank()) return oneLine(v);
+            }
+        } catch (Exception ignore) {
+        }
+        return oneLine(s);
+    }
+
+    private static String oneLine(String s) {
+        String one = s.replace('\n', ' ').replace('\r', ' ').trim();
+        return one.length() <= 60 ? one : one.substring(0, 60) + "…";
+    }
+
+    private static String hint(Lang L, String failure) {
+        String m = failure == null ? "" : failure.toLowerCase();
+        if (m.contains("429") || m.contains("rate limit") || m.contains("too many")) return L.t("run.hint.rate");
+        if (m.contains("timeout") || m.contains("timed out")) return L.t("run.hint.hang");
+        if (m.contains("401") || m.contains("403") || m.contains("unauthorized") || m.contains("api key"))
+            return L.t("run.hint.auth");
+        return L.t("run.hint.other");
+    }
+
+    private static String recordOf(String task, Map<String, Integer> tools, int steps,
+                                   String outcome, String failure) {
+        StringBuilder use = new StringBuilder();
+        for (Map.Entry<String, Integer> e : tools.entrySet()) {
+            if (use.length() > 0) use.append(',');
+            use.append(e.getKey()).append(':').append(e.getValue());
+        }
+        String ts = java.time.LocalDateTime.now()
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+        String goal = task.replace('\n', ' ').trim();
+        if (goal.length() > 80) goal = goal.substring(0, 80) + "…";
+        String res = outcome + (failure == null ? "" : "(" + shortWhy(failure) + ")");
+        return ts + " goal=" + goal + " tools=" + (use.length() == 0 ? "none" : use)
+                + " steps=" + steps + " result=" + res;
+    }
+
+    private static String shortWhy(String failure) {
+        String s = failure.replace('\n', ' ').trim();
+        int cut = s.indexOf(": http");
+        if (cut > 0) s = s.substring(0, cut);
+        return s.length() <= 60 ? s : s.substring(0, 60) + "…";
+    }
+
+    private static int repl(Config cfg) throws Exception {
+        Lang L = cfg.lang;
+        Term.out.println(Config.APP + " " + Config.VERSION + " · " + L.t("app.tag"));
+        Term.out.println(Ansi.GRAY + L.t("repl.hint") + Ansi.RESET);
+        BufferedReader in = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
+        List<Message> transcript = new ArrayList<>();
+        while (true) {
+            Term.out.println();
+            Term.out.print(Ansi.GREEN + "> " + Ansi.RESET);
+            Term.out.flush();
+            String line = in.readLine();
+            if (line == null) break;
+            line = line.trim();
+            if (line.isEmpty()) continue;
+            if (line.equals("exit") || line.equals("quit") || line.equals(":q")) break;
+            if (line.equals(":help") || line.equals("help")) { help(L); continue; }
+            if (line.equals(":doctor") || line.equals("doctor")) { doctor(cfg); continue; }
+            if (line.startsWith(":")) {
+                Term.err.println(L.t("err.unknown", line));
+                continue;
+            }
+            try {
+                run(cfg, List.of(line), transcript);
+            } catch (Exception e) {
+                Term.err.println(L.t("err.prefix", String.valueOf(e.getMessage())));
+            }
+        }
+        Term.out.println(Ansi.GRAY + L.t("repl.bye") + Ansi.RESET);
         return 0;
     }
 
@@ -330,10 +410,10 @@ public final class Cli {
         Term.out.println();
         Term.out.println(L.t("commands"));
         Term.out.println("  doctor            " + L.t("cmd.doctor"));
-        Term.out.println("  chat <prompt>     " + L.t("cmd.chat"));
         Term.out.println("  run <task>        " + L.t("cmd.run"));
         Term.out.println("  version           " + L.t("cmd.version"));
         Term.out.println("  help              " + L.t("cmd.help"));
+        Term.out.println("  (no args)         " + L.t("cmd.repl"));
         Term.out.println();
         Term.out.println(L.t("options"));
         Term.out.println("  --provider <mock|openai>  " + L.t("opt.provider"));
@@ -350,8 +430,10 @@ public final class Cli {
         Term.out.println("  --cwd <dir>               " + L.t("opt.cwd"));
         Term.out.println("  --user-lang <zh|eng>      " + L.t("opt.lang"));
         Term.out.println("  --permits <n>             " + L.t("opt.permits"));
+        Term.out.println("  --max-steps <n>           " + L.t("opt.maxsteps"));
         Term.out.println("  --tool-delay <ms>         " + L.t("opt.tooldelay"));
         Term.out.println("  --no-graph                " + L.t("opt.nograph"));
+        Term.out.println("  --scorecard               " + L.t("opt.scorecard"));
         return 0;
     }
 }

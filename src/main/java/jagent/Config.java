@@ -28,8 +28,10 @@ public final class Config {
     public final int width;
     public final int height;
     public final int permits;
+    public final int maxSteps;
     public final long toolDelayMs;
     public final boolean graph;
+    public final boolean scorecard;
     public final String modelStrong;
     public final String baseUrlStrong;
     public final String apiKeyStrong;
@@ -38,7 +40,8 @@ public final class Config {
     public final boolean resume;
 
     private Config(String provider, String baseUrl, String apiKey, String model, Lang lang,
-                   Path cwd, int width, int height, int permits, long toolDelayMs, boolean graph,
+                   Path cwd, int width, int height, int permits, int maxSteps, long toolDelayMs,
+                   boolean graph, boolean scorecard,
                    String modelStrong, String baseUrlStrong, String apiKeyStrong,
                    long budget, long compressThreshold, boolean resume) {
         this.provider = provider;
@@ -50,8 +53,10 @@ public final class Config {
         this.width = width;
         this.height = height;
         this.permits = permits;
+        this.maxSteps = maxSteps;
         this.toolDelayMs = toolDelayMs;
         this.graph = graph;
+        this.scorecard = scorecard;
         this.modelStrong = modelStrong;
         this.baseUrlStrong = baseUrlStrong;
         this.apiKeyStrong = apiKeyStrong;
@@ -83,8 +88,10 @@ public final class Config {
                 intOr(cli.get("width"), term[0]),
                 intOr(cli.get("height"), term[1]),
                 intPick(cli, p, "permits", "JAGENT_PERMITS", 4),
+                intAny(cli, p, "max-steps", "JAGENT_MAX_STEPS", 16),
                 intPick(cli, p, "tool-delay", "JAGENT_TOOL_DELAY", 0),
                 !flag(cli, p, "no-graph", "JAGENT_NO_GRAPH"),
+                flag(cli, p, "scorecard", "JAGENT_SCORECARD"),
                 pick(cli, p, "model-strong", "JAGENT_MODEL_STRONG", ""),
                 pick(cli, p, "base-url-strong", "JAGENT_BASE_URL_STRONG", ""),
                 pick(cli, p, "api-key-strong", "JAGENT_API_KEY_STRONG", ""),
@@ -121,8 +128,25 @@ public final class Config {
         return intOr(v, def);
     }
 
+    private static int intAny(Map<String, String> cli, Properties p, String key, String env, int def) {
+        String v = cli.get(key);
+        if (v == null) v = System.getenv(env);
+        if (v == null) v = p.getProperty(key);
+        if (v == null) return def;
+        try {
+            return Integer.parseInt(v.trim());
+        } catch (NumberFormatException e) {
+            return def;
+        }
+    }
+
     public String systemPrompt() {
-        return resource("/prompt/system.txt").replace("{{user_lang}}", lang.tag());
+        return resource("/prompt/system.txt")
+                .replace("{{user_lang}}", lang.tag())
+                .replace("{{os}}", jagent.core.Env.os())
+                .replace("{{shell}}", jagent.core.Env.shellName())
+                .replace("{{cwd}}", cwd.toString())
+                .replace("{{encoding}}", jagent.core.Env.consoleEncoding());
     }
 
     public static String resource(String path) {

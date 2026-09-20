@@ -89,6 +89,11 @@ public final class Agent {
         return this;
     }
 
+    public Agent prior(List<Message> earlier) {
+        if (earlier != null && !earlier.isEmpty()) convo.addAll(earlier);
+        return this;
+    }
+
     public Agent compression(boolean on) {
         this.compress = on;
         return this;
@@ -111,7 +116,7 @@ public final class Agent {
         convo.add(Message.user(task));
         String root = graph.add(parentNode, NodeKind.AGENT, label(task));
         graph.state(root, NodeState.RUNNING);
-        for (int step = 1; step <= maxSteps; step++) {
+        for (int step = 1; maxSteps <= 0 || step <= maxSteps; step++) {
             steps = step;
             obs.onStep(step);
             if (mem != null) convo.set(0, Message.system(assembleSystem()));
@@ -150,7 +155,7 @@ public final class Agent {
             if (mem != null) mem.episode(step, "assistant", t.content());
 
             if (!t.hasTools()) {
-                graph.finish(node, summarize(t.content()));
+                graph.finish(node, "answer");
                 graph.finish(root, "done");
                 return t.content();
             }
@@ -249,12 +254,6 @@ public final class Agent {
     private static String label(String task) {
         String s = task.replace('\n', ' ').trim();
         return s.length() <= 40 ? s : s.substring(0, 40) + "…";
-    }
-
-    private static String summarize(String s) {
-        if (s == null) return "";
-        String one = s.replace('\n', ' ').trim();
-        return one.length() <= 60 ? one : one.substring(0, 60) + "…";
     }
 
     public List<Message> convo() { return convo; }
