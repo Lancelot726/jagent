@@ -3,7 +3,6 @@ package jagent.term;
 import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 public final class Term {
@@ -23,8 +22,7 @@ public final class Term {
     }
 
     public static String consoleEncoding() {
-        String v = System.getProperty("native.encoding");
-        return v == null ? Charset.defaultCharset().name() : v;
+        return jagent.core.Env.consoleEncoding();
     }
 
     public static int envInt(String key, int def) {

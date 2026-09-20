@@ -10,10 +10,12 @@ import java.util.List;
 public final class Memory {
 
     private static final int MAX_FACTS = 200;
+    private static final int MAX_RUNS = 20;
     private static final int MAX_ARTIFACT_CHARS = 40_000;
 
     private final WorkDir dir;
     private final List<String> facts = new ArrayList<>();
+    private final List<String> runs = new ArrayList<>();
     private String summary = "";
 
     public Memory(WorkDir dir) throws IOException {
@@ -22,6 +24,10 @@ public final class Memory {
         for (String line : dir.read(WorkDir.FACTS).split("\n")) {
             String t = line.trim();
             if (t.startsWith("- ")) facts.add(t.substring(2).trim());
+        }
+        for (String line : dir.read(WorkDir.RUNS).split("\n")) {
+            String t = line.trim();
+            if (t.startsWith("- ")) runs.add(t.substring(2).trim());
         }
         summary = dir.read(WorkDir.SUMMARY).replaceFirst("(?s)^# summary\\s*", "").trim();
     }
@@ -46,6 +52,16 @@ public final class Memory {
     public synchronized void summarize(String text) throws IOException {
         summary = text == null ? "" : text.trim();
         dir.write(WorkDir.SUMMARY, "# summary\n\n" + summary + "\n");
+    }
+
+    public synchronized List<String> runs() { return List.copyOf(runs); }
+
+    public synchronized void recordRun(String line) throws IOException {
+        String r = line == null ? "" : oneLine(line);
+        if (r.isEmpty()) return;
+        runs.add(r);
+        while (runs.size() > MAX_RUNS) runs.remove(0);
+        rewriteRuns();
     }
 
     public void episode(int step, String actor, String event) throws IOException {
@@ -74,6 +90,10 @@ public final class Memory {
     public String digest() {
         StringBuilder sb = new StringBuilder();
         if (!summary.isEmpty()) sb.append("summary: ").append(summary).append('\n');
+        if (!runs.isEmpty()) {
+            sb.append("earlier runs, newest last:\n");
+            for (String r : runs) sb.append("- ").append(r).append('\n');
+        }
         if (!facts.isEmpty()) {
             sb.append("facts:\n");
             for (String f : facts) sb.append("- ").append(f).append('\n');
@@ -85,6 +105,12 @@ public final class Memory {
         StringBuilder sb = new StringBuilder("# facts\n\n");
         for (String f : facts) sb.append("- ").append(f).append('\n');
         dir.write(WorkDir.FACTS, sb.toString());
+    }
+
+    private void rewriteRuns() throws IOException {
+        StringBuilder sb = new StringBuilder("# runs\n\n");
+        for (String r : runs) sb.append("- ").append(r).append('\n');
+        dir.write(WorkDir.RUNS, sb.toString());
     }
 
     private static String safe(String name) throws IOException {

@@ -74,7 +74,7 @@ public final class GraphView {
     }
 
     private static String clip(String s) {
-        return s.length() <= 48 ? s : s.substring(0, 48) + "…";
+        return s.length() <= 60 ? s : s.substring(0, 60) + "…";
     }
 
     private static String c(String ansi, boolean on) {

@@ -8,6 +8,7 @@ import java.nio.file.Path;
 public final class WorkDir {
 
     public static final String PLAN = "plan.md";
+    public static final String RUNS = "runs.md";
     public static final String FACTS = "facts.md";
     public static final String SUMMARY = "summary.md";
     public static final String EPISODES = "episodes.log";
@@ -31,6 +32,7 @@ public final class WorkDir {
     public void init() throws IOException {
         Files.createDirectories(root);
         Files.createDirectories(root.resolve(ARTIFACTS));
+        seed(RUNS, "# runs\n\n");
         seed(FACTS, "# facts\n\n");
         seed(SUMMARY, "# summary\n\n");
         seed(EPISODES, "");

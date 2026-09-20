@@ -20,13 +20,15 @@ public final class SpawnTool {
 
     public static Tool create(Path root, Router router, Graph graph, Scheduler sched,
                               Auction auction, Budget budget, Governor governor, String system,
-                              BiFunction<String, String, ToolRegistry> registryFactory) {
-        return create(root, router, graph, sched, auction, budget, governor, system, registryFactory, 1);
+                              BiFunction<String, String, ToolRegistry> registryFactory, int maxSteps) {
+        return create(root, router, graph, sched, auction, budget, governor, system,
+                registryFactory, maxSteps, 1);
     }
 
     private static Tool create(Path root, Router router, Graph graph, Scheduler sched,
                                Auction auction, Budget budget, Governor governor, String system,
-                               BiFunction<String, String, ToolRegistry> registryFactory, int depth) {
+                               BiFunction<String, String, ToolRegistry> registryFactory,
+                               int maxSteps, int depth) {
         return new Tool("spawn_agent",
                 "Spawn a sub-agent on its own graph node to work on one independent sub-task. "
                         + "Call twice with different sub-tasks to run them in parallel.",
@@ -39,9 +41,9 @@ public final class SpawnTool {
                     ToolRegistry sub = registryFactory.apply(label, task);
                     if (depth < MAX_DEPTH) {
                         sub.add(create(root, router, graph, sched, auction, budget, governor, system,
-                                registryFactory, depth + 1));
+                                registryFactory, maxSteps, depth + 1));
                     }
-                    Agent a = new Agent(router, sub, graph, sched, system, s -> {}, null, 8,
+                    Agent a = new Agent(router, sub, graph, sched, system, s -> {}, null, maxSteps,
                             auction, budget, governor, node);
                     try {
                         String out = a.run(task);
