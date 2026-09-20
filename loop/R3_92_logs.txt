@@ -12,3 +12,76 @@
 [2026-09-20] S1: 重读宪法 — R1_90 与 R2_90 仍有效; R3_90 只登记 4 条修订(标签归 L1 / 取用 REPL 基础版 / 图不承载长摘要 / 进化论暂缓)
 [2026-09-20] S1: 建 R3_00/R3_10/R3_90/R3_91/R3_92/R3_94; R3_93 不预建, 待 G4 定稿
 [2026-09-20] S1: 查明现状 — 标签在 lang/*.properties 即 L2; Agent.summarize 截 60 + GraphView.clip 截 48 二次截断; chat 两个分支均只 print 无换行; Cli 无 stdin 循环
+[2026-09-20] G1: 作者第四轮答【3】入口=不带参数启动即进 REPL(非新增子命令)
+[2026-09-20] G1: 作者第四轮答 REPL 模式=提示符前带 [run] 标记, 可切换, 默认 run
+[2026-09-20] G1: 作者第四轮答【4】幅度追加 — 对账单整块都要改(拍卖/中标/利润/信誉/预算/对账), 合计 9 词
+[2026-09-20] G1: 替换表确认 — 机制对账->summary / 对账单->summary / 拍卖->picks / 中标->won / 信誉->score / 预算->quota / 控制论->flow / 竞价->pick / 利润->net
+[2026-09-20] S3: 定案 — 该批标签属 L1, 令 zh 与 eng 取值相同(以 eng 现成中性措辞为准), 对账单整块不再随 --user-lang 变, 不再中英混排
+[2026-09-20] S3: 存疑待 G3 确认 — 作者曾提"上下键选择", 与"只做基础版不做 raw mode"相抵; 上下键留 R4 (本条"按打字切模式"的解读已被下方 G1 追加 a/b 取代: chat 取消后 REPL 只剩 run, 模式标记与切模式指令一并作废)
+[2026-09-20] S1: G1 五项口径全部锁定 -> R3_10 §2; 替换表 9 词已确认
+[2026-09-20] G1(追加 a): 作者「感觉chat功能可以直接取消 既然它不读文件 默认就是run」-> 取消 chat 功能; 删子命令/帮助行/cmd.chat/REPL 模式; 原【2】chat 分行随之作废
+[2026-09-20] G1(追加 b): 作者「提示符前都不用加[run]因为去除chat以后默认就是run」-> REPL 无模式标记, 提示符 [run] > 改为 >
+[2026-09-20] S3: 口径扩展 — 作者点名 9 词, 但 9 词散在 summary 整块与 run.* 里, 只换 9 词会出现中英混排; 按"L1 整块固定英文"的层次原则把 graph.*/score.*/run.* 显示标签整批统一英文(键名与键集合不动); 超出已确认替换表, 已请作者 G3 一并确认
+[2026-09-20] S4: P0 标签中性化 — zh/eng 两档该批取值相同; 散文类(run.usage/limit/abort/plan, repl.hint/bye, err.*)仍随 --user-lang 变
+[2026-09-20] S4: P1 执行图 — Agent 收尾节点 note 由 summarize(t.content()) 改为固定标记 answer; summarize() 随唯一调用点消失而删除; Cli.run 在 agent.run 返回后打印 run.answer + 完整回复(不再截断); GraphView.clip 48 改 60, 与 Scheduler.note 的 60 对齐, 消除二次截断
+[2026-09-20] S4: P3 REPL 基础版 — Cli 不带参数启动转 repl(); > 提示符 + 读一行跑一行; 支持 :help/help, :doctor/doctor, :q/exit/quit, EOF; 未知 : 指令报错但不退出循环
+[2026-09-20] S4: P4 取消 chat — 删 Cli.chat() 与 client(cfg,model) 重载、case "chat"、帮助行、cmd.chat 键、REPL 模式; 清理 Delta/Message/Turn 未用 import
+[2026-09-20] S5: 文档同步 — README(chat 示例改 REPL 示例, 验证表改 7 套/458, 状态节重写); docs/DEMO(第 3 节改交互式命令行, 终端输出引文随标签更新, 附录表改 7 套/458); 新增 cmd.repl 帮助行
+[2026-09-20] S5: 断言 — 新建 target/t/R3T.java(10 节 106 条: L1 zh=eng / L1 无 CJK / L2 散文仍分档 / 学科词已清 / chat 子命令已拒 / 图 note=answer 且不含回复 / clip 60 / REPL EOF 退出 / REPL 跑任务后 :q / 未知 : 指令容错)
+[2026-09-20] S5: 随标签同步旧断言 — P3T 4 处(live.title/tree.title/tree.stat); P7T 4 节(zh 标签 / 机制对账 / eng / score.title)
+[2026-09-20] S5: 全量回归 — P1T 30 + P2T 27 + P3T 32 + P4T 61 + P5T 120 + P6T 79 + P7T 109 = 458, R3T 106, 合计 564 全绿
+[2026-09-20] S5: 隐私扫描 — src/README/docs 与 git 历史均无厂商名/地址/密钥; 仅 R2_90 的规则陈述命中, 属预期
+[2026-09-20] S6: 待 G3 — 作者在本机真终端实跑 (REPL 反复敲命令 + 收尾统一 answer 段 + 标签观感); 编码与断言已就绪
+[2026-09-20] G3(现场反馈): 作者投 C:\Users\lenovo\Desktop\question.txt (209 行终端实录), 四问: 查不到当前日期 / 第二次对话像失忆 / 终端出现 ** 与代码围栏 / 仍无总结段落
+[2026-09-20] G3: 原话归档 -> R3_04_req_field.in.txt(逐字, 附四条归类判断)
+[2026-09-20] G1(追加 c): 作者裁定四项**并入 R3**, 不开 R4
+[2026-09-20] G1(追加 d): 记忆口径 = 落盘回灌 **+** 同一会话内保留对话上下文(两条都要)
+[2026-09-20] G1(追加 e): Windows 命令通道**保持 cmd**, 补环境信息并修掉卡死; 明确不换 PowerShell
+[2026-09-20] G1(追加 f): 呈现四项全要 — 剥 Markdown 记号 / 每轮末加运行总结 / 失败时也要有总结 / 答案不打印两遍
+[2026-09-20] S3: 根因定位 — 系统提示无任何环境信息, 模型按 Unix 猜(date '+…', python3); cmd 的 date 不带 /t 是交互式命令, 子进程 stdin 未关 -> 挂到 10s 被杀; 输出按 UTF-8 硬解码而控制台 GBK -> 乱码; 本轮共 4 步, 第 3 步 python 其实已成功, 但第 4 步 429 中止整轮, 结果被丢弃
+[2026-09-20] S3: 根因定位 — episodes.log 只写不读; facts 仅模型主动 remember 才有内容; summary 仅压缩发生才写(mock 短任务 compress: 0 events) -> 记忆恒空, 二次对话必然失忆; REPL 每行重建全部对象
+[2026-09-20] S3: 根因定位 — 答案原样打印未经剥离; 打印的是模型回复而非运行级总结; 流式增量与最终答案各打一遍(重复)
+[2026-09-20] S4: P7 环境事实 — 新增 core/Env.java(os/shell/shellName/consoleCharset/consoleEncoding); prompt/system.txt 增规则 10(纯文本无 markdown)与 Local environment 段({{os}}/{{shell}}/{{cwd}}/{{encoding}}); Config.systemPrompt 填槽; bash 工具描述带 shell 与 stdin 已关
+[2026-09-20] S4: P8 bash 工具 — 改用 Env.shell(); start() 后即 close() 子进程 stdin; 输出改 ByteArrayOutputStream 收字节后按控制台编码解码, 解出 U+FFFD 再退 UTF-8
+[2026-09-20] S4: P8 实测 — date 10s 超时 -> 54ms 返回; echo %date% 40ms; dir /b 46ms; python -c 267ms; 探针确认 native.encoding=GBK, decode 回环 GBK 一致
+[2026-09-20] S4: P9 记忆 — WorkDir 增 RUNS 常量与播种; Memory 增 runs 列表/MAX_RUNS=20/recordRun/runs/rewriteRuns, digest 增 earlier runs 段; Agent 增 prior(List<Message>); Cli 收尾 recordRun, REPL 逐行传 transcript
+[2026-09-20] S4: P10 呈现 — 新增 term/Text.java(plain: 去 ** __ 反引号 标题号 引用号, - 转 ·, 围栏内改缩进); Cli 答案走 Text.plain; 新增 report/hint/recordOf/shortWhy; onText 传 null 以去掉重复打印
+[2026-09-20] S4: P10 语言包 — zh/eng 增 17 个 rep.* 键(总结标题/任务/工具/结果/完成/超限/失败/已取得/建议/四类 hint/已记入)
+[2026-09-20] S5: 文档同步 — README(环境槽位段/运行总结示例/验证表 8 套 638/状态节 R3 扩写); docs/DEMO 新增 §13 本机环境 / §14 记忆两条契约 / §15 呈现, §4 与 §10 补总结与 runs.md; docs/PROTOCOL 增 §3.3 runs.md 与 §5 记忆的两条契约, 原 §5/§6 顺延, §7 补呈现剥离与环境同源两条
+[2026-09-20] S5: 断言扩充 — R3T 增 [11]环境槽位 [12]bash 不挂死与解码 [13]runs.md 回灌 [14]Text.plain [15]收尾总结与失败记账; R3T 106 -> 180
+[2026-09-20] S5: 全量回归 — P1T 30 + P2T 27 + P3T 32 + P4T 61 + P5T 120 + P6T 79 + P7T 109 = 458, R3T 180, 合计 638 全绿
+[2026-09-20] S6: 待 G3 — question.txt 的四项已全部落地并断言覆盖, 再次请作者在本机终端实跑确认 (REPL 反复敲 + 查日期 + 关掉重开看是否失忆 + 收尾总结观感)
+[2026-09-20] G1(追加 g): 作者「怎么让步数无上限」-> 加配置键 max-steps/JAGENT_MAX_STEPS(默认 16, 0 或负数=不限); 子 agent 跟着一起放开(与根共用); 兜底闸先不加; 四项并入 R3 不新开轮
+[2026-09-20] S3: 现况定位 — 上限是两处写死字面量(Cli 16 / SpawnTool 8); 循环 step <= maxSteps, 跑满即 graph.fail(root,"max steps") 返回 null, Cli 判为 limit; 确认 Budget 只记账+影响出价、Governor.open 在 Agent.run 未被读取, 两者都不中止循环
+[2026-09-20] S3: 方案否决 — 不用 Integer.MAX_VALUE 当无上限: step++ 在该值溢出为负, 条件反恒真; 改用哨兵 maxSteps <= 0 || step <= maxSteps
+[2026-09-20] S4: P14 步数上限 — Config 增 maxSteps 字段与 intAny(允许 <=0, intOr 会退回默认值故不可复用); load 增 max-steps/JAGENT_MAX_STEPS 默认 16; Cli 传 cfg.maxSteps; SpawnTool.create 增 maxSteps 参数并透传父级与子级 Agent; 帮助行增 --max-steps; zh/eng 增 opt.maxsteps(属 L2 散文, 分档)
+[2026-09-20] S5: 断言扩充 — R3T 增 [16]默认 16 / 0 与负数原样保留 / 有限值仍解析 / 双档键齐 / --max-steps 1 记 result=limit / --max-steps 0 跑到自然收尾记 result=done; R3T 180 -> 188
+[2026-09-20] S5: 回归破口与修复 — P4T 直接调 SpawnTool.create 的九参旧签名 -> NoSuchMethodError(该套件被 runner 的 grep 吞成空行, 靠 TOTAL 少 61 条发现); 改测试调用补 maxSteps; 复跑 646 全绿
+[2026-09-20] S5: 文档同步 — README 选项表增 --max-steps 与验证表 646/R3T 188/状态节补句; docs/DEMO §4 增步数上限段(含"没有第二道硬闸"的边界), 附录表改 646/188; docs/PROTOCOL §3.7 键列表增 max-steps, §7 增"步数上限是唯一循环出口"一条
+[2026-09-20] S5: 全量回归 — P1T 30 + P2T 27 + P3T 32 + P4T 61 + P5T 120 + P6T 79 + P7T 109 = 458, R3T 188, 合计 646 全绿
+[2026-09-20] S1: 宪法增修订 8(步数上限改配置项; 记实现约束与"不限步数时无第二道硬闸"的已知边界, 第二道硬闸归 R4 与熔断项合并); R3_10 增 §2.3 与验收 14/15; 交付物增一行
+[2026-09-20] S6: 待 G3(不变) — 追加项已落地, 实跑时连同 --max-steps 一起看
+[2026-09-20] G3(现场反馈·第二回): 作者贴回真终端一屏 — answer 之后仍叠着绿色「本轮总结」四行(任务/工具/结果/已记入) — 原话「这个东西以后不要出现了 因为已经有answer部分了 非图像模式最好也能简单显示每一个step进度」
+[2026-09-20] G1(追加 h): 作者裁定三项 — 总结块=失败也用 answer 回答(整块删); step 显示=现状保留只去噪声行; 对账块=默认不开加 --scorecard 才显示; 并入 R3 不新开轮
+[2026-09-20] S3: 现况定位 — 非图模式过程行本就齐(step/tool/result), 冒犯感来自收尾三块叠印: answer + [steps]/[quota]/plan + 蓝色 summary 八行 + 绿色 本轮总结 四行; 工具行还直接印了原始 JSON 参数
+[2026-09-20] S3: 方案 — answer 段承担三种结局(成功答复/失败=第几步+原因+建议/中止=截至第几步无结论); report() 与其 rep.* 键族整体删除; onBid 与 [quota] 行与 score.lines() 挂 cfg.scorecard; 新增 argBrief 摘要
+[2026-09-20] S4: P15 呈现 — Config 增 scorecard 字段与 flag(scorecard/JAGENT_SCORECARD); Cli 删 report() 与 hint 的 rep.* 引用, answer 段统一收尾, onToolCall 改印 argBrief(args), onBid 首行 return 短路; 新增 argBrief/oneLine
+[2026-09-20] S4: P15 语言包 — 删 rep.* 十七键与 run.abort; 增 run.failed/run.hint/run.hint.rate/hang/auth/other 与 opt.scorecard; run.limit 措辞补「没有得到最终答复」
+[2026-09-20] S4: P15 帮助行 — 增 --scorecard; docs 同步(README 选项表与收尾示例重写 / DEMO §4 §7 §8 §15 / PROTOCOL §7 三条)
+[2026-09-20] S4: P15 边界 — --scorecard 只关打印不关记账: score.save 移出该分支, work/scorecard.txt 与 work/runs.md 照常写盘(与「剥离只作用于显示层」同口径)
+[2026-09-20] S5: 断言改写 — R3T[15] 改判 18 个键已消失 + 6 个新散文键双档齐; 新增 R3T[17] 子进程实跑三档(mock/--max-steps 1/死通道)对整屏断言, 并反射直调 argBrief 六种输入; R3T 188 -> 208
+[2026-09-20] S5: 全量回归 — P1T 30 + P2T 27 + P3T 32 + P4T 61 + P5T 120 + P6T 79 + P7T 109 = 458, R3T 208, 合计 666 全绿
+[2026-09-20] S5: 实测对账 — 默认屏: 无 本轮总结/无 summary/无 quota/无原始 JSON, 收尾只有 answer; 加 --scorecard: pick 行与 summary 八行回来; --max-steps 1: answer 段内写「已达最大步数 1, 循环中止, 没有得到最终答复」; 死通道: answer 段内写「本轮中止于第 1 步」+ 建议
+[2026-09-20] S1: 宪法修订 6 补记 — 第 2 款「另给一段运行级总结」改为由 answer 段承担, 目标不减载体变; 并增「机制自证默认静默, 关闭打印不等于关闭记账」
+[2026-09-20] S6: 待 G3(不变) — 请作者再实跑一遍看收尾观感与默认屏是否清爽, 并试 --scorecard 与 --max-steps 两种取值
+[2026-09-20] S0: 第二回现场原话归档 -> R3_05_req_field_report.in.txt(逐字, 附三条归类判断与作者裁定)
+[2026-09-20] S0: 纪律修正 — 撤掉此前对 R3_00 的就地批注(作者后续话语已逐字落在 R3_10 §2.1 与 R3_04/R3_05), R3_00 复原为 G4 时的只读存档
+[2026-09-20] G3: 已过 — 作者实跑一个相关场景, 基本成功(原话「感觉还不错」); 未指出具体缺陷条目; 两回现场意见共七项均已落地并断言覆盖
+[2026-09-20] S6->S7: 推进 — 91 状态改「G3 已过, 当前节点 S7(待 G4)」; 当轮细图 S0-S6 判 done, S7 判 cur, S8 判 todo; G3 闸门行记已过, G4 行记待
+[2026-09-20] S7: 待 G4 — 需作者拍板冻结; 因 R3 全部改动尚未提交, 定稿须一并确认提交口径(交付提交 + 元层提交, 同 R1/R2 做法)
+[2026-09-20] S5: 冻结前复跑 — 全套 666 全绿(P1T 30 / P2T 27 / P3T 32 / P4T 61 / P5T 120 / P6T 79 / P7T 109 / R3T 208), 待冻结的就是这个状态
+[2026-09-20] S5: 隐私扫描 — 产品侧(src/README/docs)无厂商名/地址/密钥; loop/ 命中仅规则表述本身; survey/ 有命中但非本项目、未纳入提交
+[2026-09-20] S7: G4 拍板 — 作者裁定「现在冻结」+「两个提交, 同 R1/R2」
+[2026-09-20] S7: 交付提交 = 630f92b "R3: terminal UX — REPL, neutral labels, single answer tail"(17 改 2 增, 不含 loop/ 与 survey/)
+[2026-09-20] S8: 归档 — 写 R3_93_frozen.md(基线 630f92b + 产品 14 件 / 文档 3 件 md5 + 断言 4 件 md5 + 666 基线 + 转 R4 七项); 91 状态与两图推 S8 done、G4 记已拍板; 94 增定稿行与进展; R3_10 §5 槽位表改 93 已建
+[2026-09-20] S8: 自检 — check_naming.py 合规; 空壳对账: 30-60 槽位本轮未建(产出即源码与文档), 无需删
