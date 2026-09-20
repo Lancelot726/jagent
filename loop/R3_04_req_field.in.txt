@@ -1,0 +1,115 @@
+R3 现场实跑问题单 · jagent
+来源：作者 2026-09-20 在真终端实跑 R3 编码后交回（原始件 question.txt，本文件为其只读存档）
+性质：**R3 的 G3 现场意见**，经作者当场裁定**并入 R3**（不新开 R4）
+基线：R3 编码完成态（标签中性化 / 图 note=answer / chat 取消 / REPL 基础版 已就位）
+
+======================================================================
+作者原话（逐条摘录，未改写）
+======================================================================
+
+1. 居然让他查个现在的日期都不行
+2. 我们确实强调本地记忆 但是每次第二次对话都像是失忆了 不应该
+   3jagent目录中是有记录记忆的地方吗
+   （注：原话如此，序号 3 与下一条的序号挤在一起，不影响判读）
+3. 输出了模型送回的格式里的很多符号 - ** ** 这些都不应该留着 ```cmd这种
+4. 好像依然是没有总结段落 最好是每个最后有一段话总结做了什么
+
+======================================================================
+以下为当时的终端实录（原始件 question.txt 正文，未改写）
+======================================================================
+
+C:\Users\lenovo\Desktop\jagent>  java -jar target/jagent.jar --no-graph
+jagent 0.1.0 · 终端 coding agent（纯 JDK，零依赖）
+输入任务后回车执行；:help 帮助，exit 退出
+
+> 现在是几月几日几点
+[deepseek-flash | kimi-k2.7-code]
+
+  step 1
+  pick cheap=0.44 strong=0.51 -> strong (pay 0.44, +0.14)
+  tool bash {"command": "date '+%Y年%m月%d日 %H:%M:%S'", "timeout_sec": 10}
+           : (      )  10s (killed) ϵͳ ޷             ڡ
+
+  step 2
+  pick cheap=0.44 strong=0.50 -> strong (pay 0.44, +0.14)
+  tool bash {"command": "python3 -c \"import datetime; ...\"", "timeout_sec": 10}
+          ļ   1 'python3'      ڲ    ⲿ   ，Ҳ   ǿ    еĳ
+
+  step 3
+  pick cheap=0.43 strong=0.49 -> strong (pay 0.43, +0.13)
+  tool bash {"command": "python -c \"import datetime; ...\"", "timeout_sec": 10}
+  result exit 0 2026  09  20   01:49:53
+
+  step 4
+  pick cheap=0.42 strong=0.47 -> strong (pay 0.42, +0.12)
+  模型调用失败，已中止本轮: all 2 attempts failed: http 429: {"error":{"message":
+  "Organization Rate limit exceeded, please try again after 1 seconds", ...}}
+
+  [steps=4 nodes=8 in=2654 out=317 18509ms]
+  [quota 2971/40000 tok net 0.53 conc=3 err=49% ctl:down 6->3]
+  计划已写入 C:\Users\lenovo\Desktop\jagent\work\plan.md
+
+  summary
+  picks: 4 rounds · cheap won 0 · strong won 4 · net 0.53
+  ...
+  summary written to C:\Users\lenovo\Desktop\jagent\work\scorecard.txt
+错误: all 2 attempts failed: http 429: ...
+
+> 我刚刚做了什么
+  step 1
+  pick cheap=0.44 strong=0.51 -> strong (pay 0.44, +0.14)
+你好！我这边没有关于你"刚刚做了什么"的信息——这是我们对话的第一条消息，……
+  answer
+（同一段回复被原样打印第二遍）
+
+> 描述之前做了什么
+  step 1
+  tool recall {}
+  result (memory is empty)
+  step 2
+  tool list_files {"path": ".", "depth": 3}
+  result .claude/settings.local.json .gitignore ... demo-run/d2/a.txt d...
+  step 3
+  模型调用失败，已中止本轮: all 2 attempts failed: http 429: ...
+
+> 现在是几月几日 用cmd命令
+  step 1
+在 CMD 里查看今天是几月几日，可以用这个命令：
+
+```cmd
+date /t
+```
+
+示例输出：
+
+```cmd
+2025/09/25 周四
+```
+（Markdown 记号与代码围栏原样进终端；answer 段再打一遍）
+
+> 刚刚我和你说了什么
+  step 1
+  tool recall {}
+  result (memory is empty)
+  step 2
+我没有你刚才说话内容的记录。可能是会话刚刚开始，或者之前的上下文没有保留下来。
+
+======================================================================
+Claude 对输入的四条归类判断（供作者确认，判断错请纠正）
+======================================================================
+
+| # | 类型 | 根因（已定位） |
+|---|---|---|
+| 1 | **功能缺陷**（环境三连） | 系统提示无环境信息 → 模型猜 Unix 命令；`bash` 走 `cmd.exe /c`，CMD 的 `date` 无 `/t` 会交互式等输入且子进程 stdin 未关 → 卡死到超时；输出按 UTF-8 解码而控制台为 GBK → 乱码；末步 429 中止整轮，已取到的日期被丢弃 |
+| 2 | **功能缺陷**（记忆只写不读） | `episodes.log` 全库无人读；`facts` 靠模型主动 `remember`，`summary` 仅压缩时写 → 记忆恒空；REPL 每行重建全套对象，会话内也无上下文 |
+| 3 | **呈现缺陷** | 模型回复原样进终端，未做任何剥离；系统提示亦未要求 |
+| 4 | **呈现缺陷** | 收尾打印的是模型回复原文而非运行级总结；失败只剩一行错误；同一段内容流式 + answer 打两遍 |
+
+四项**均不触碰 R2 已冻结的机制**（竞价 / 预算 / 信誉 / 控制论的行为与积分不变）。
+
+作者 2026-09-20 裁定口径（四条，详见 `R3_10` §2.2）：
+
+- 【1】**保持 cmd**，补环境信息并修掉卡死；**不引入 PowerShell**
+- 【2】**落盘回灌 + 同一会话内保留对话上下文**
+- 【3】**剥掉 Markdown 记号**（保留可读层次）
+- 【4】**每轮末加运行总结；失败时也要有总结；回答不打印两遍**
