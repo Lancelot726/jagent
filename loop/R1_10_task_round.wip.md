@@ -52,7 +52,7 @@ S0 收件 → S1 建轮 → S2 调研 → S3 架构 → S4 编码 → S5 验证 
 | P1 | `llm` 包 + `MockClient` | mock 流式；工具参数增量拼接正确 |
 | P2 | `tool` 包 + `Agent` + `SystemPrompt` | 自主完成"建文件→写入→读回" |
 | P3 | `graph`/`core`/`term` | 实时 Unicode 树；两个工具调用同时 RUNNING |
-| P4 | `SpawnTool` + `Auction` + `Budget` + `Governor` | 竞价行打印；并发度随错误率升降 |
+| P4 | `SpawnTool` + `Auction` + `Budget` + `Governor` | 报价行打印；并发度随错误率升降 |
 | P5 | `mem` 包 + `MemoryTool` + `HumanTool` | `work/` 长出协议文件；token 先涨后跌；重启续跑 |
 
 跑不通不进下一阶段。

@@ -6,7 +6,7 @@
 
 ```mermaid
 flowchart LR
-    R1["R1 首轮：可运行 demo<br/>骨架/图/并行/记忆"] --> R2["R2 进化论基因组<br/>+ GraalVM native<br/>待触发"]
+    R1["R1 首轮：可运行 demo<br/>骨架/图/并行/记忆"] --> R2["R2 自适应演化参数集<br/>+ GraalVM native<br/>待触发"]
     R2 --> R3["R3 待定"]
 
     classDef done fill:#b7e4c7,stroke:#2d6a4f
@@ -61,6 +61,6 @@ flowchart TD
 | P1 | LLM 流式 + Mock | **完成**（Lang 槽位机制一并落地；P1T 26/26） |
 | P2 | ReAct + 工具 | **完成**（6 工具 + 路径越界拒绝；mock 3 轮自主收尾；P2T 27/27） |
 | P3 | 图 + Unicode 渲染 + 并行 | **完成**（两工具 RUNNING 重叠 201ms；树形连接符与字形正确；P3T 32/32） |
-| P4 | 多 agent + 元机制 | **完成**（竞价行打印；两个子 agent 在图上并行分叉；并发度随错误率 4→1；P4T 61/61） |
+| P4 | 多 agent + 元机制 | **完成**（报价行打印；两个子 agent 在图上并行分叉；并发度随错误率 4→1；P4T 61/61） |
 | P5 | 记忆 + 语义压缩 | **完成**（`work/` 长出协议文件；压缩行打印 ROI 依据；`--resume` 从 `plan.md` 的 `goal:` 续跑成功；**P5T 120/120**） |
 | 交付 | README / docs / 基准 | **完成**（`README.md`、`docs/PROTOCOL.md`、`docs/DEMO.md`、`R1_50_bench_startup.wip.md`；启动中位 70ms、jar 129KiB） |
