@@ -219,7 +219,7 @@ user-lang=zh
 - 版本管理：`work/` 一律不进 git；协议件本身不在仓库里，只有本文档在。
 - 呈现剥离：`Text.plain` 只作用于**终端显示**（`Cli` 打印答案时）。`work/` 与对话上下文里保留模型的原文，因此协议件的内容不因显示层而改变。
 - 本机环境：系统提示里的 `os` / `shell` / `cwd` / `console encoding` 四项事实由 `Env` 提供（见 `loop/R3_90_req_constitution.md` 修订 7）。`shell` 决定 `bash` 工具的调用方式，`console encoding` 决定工具输出的解码方式——两者必须同源，否则输出会乱码。
-- 步数上限：`max-steps` 是唯一的循环出口，根 agent 与子 agent 共用同一个值（`SpawnTool` 透传）。`0` 或负数表示不限，此时**没有第二道硬闸**——`Budget` 只记账、`Governor` 的跳闸只影响出价，都不中止循环。因此「不限步数」这一档只承诺不给自设的截止，不承诺能兜住不收敛的任务。
+- 步数上限：`max-steps` 是唯一的循环出口，根 agent 与子 agent 共用同一个值（`SpawnTool` 透传）。`0` 或负数表示不限，此时**没有第二道硬闸**——`Budget` 只记账、`Governor` 的熔断只影响报价，都不中止循环。因此「不限步数」这一档只承诺不给自设的截止，不承诺能兜住不收敛的任务。
 - 收尾的唯一落点：`run` 的最后一屏是 `answer` 段，**成功 / 失败 / 中止三种结局都在这一段内交付**（失败给「停在第几步 + 原因 + 建议」，中止给「截至第几步没有最终答复」）。不存在第二个总结块——早先的「本轮总结」四行块已整体删除，其键族（`rep.*`）也从语言包里移除。
-- 机制自证默认静默：竞价行 `pick`、末行 `[quota ...]`、收尾的 `summary` 对账块同为运维视角，只在 `--scorecard` 打开时打印。默认输出只保留 `step` / `tool` / `result` 三类过程行与 `answer` 段。工具参数按 `path` / `command` / `task` / `pattern` / `name` / `url` 取一个值摘要显示（截 60 字符），原始 JSON 不上屏。
+- 机制自证默认静默：报价行 `pick`、末行 `[quota ...]`、收尾的 `summary` 对账块同为运维视角，只在 `--scorecard` 打开时打印。默认输出只保留 `step` / `tool` / `result` 三类过程行与 `answer` 段。工具参数按 `path` / `command` / `task` / `pattern` / `name` / `url` 取一个值摘要显示（截 60 字符），原始 JSON 不上屏。
 - 记账与呈现分离：`--scorecard` 关掉只是**不打印**，`work/scorecard.txt` 与 `work/runs.md` 的写入不受影响（`run.answer` 的剥离同样只作用于显示层，见上一条）。
