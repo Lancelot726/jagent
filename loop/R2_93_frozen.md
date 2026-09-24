@@ -23,8 +23,8 @@
 |---|---|---|
 | `src/main/java/jagent/Config.java` | `f4b14947b474635a921dedb50a89f485` | 双档位独立配置 |
 | `src/main/java/jagent/Cli.java` | `11a68cfbf3211a765251befe0538aea7` | 档位化客户端工厂 + 对账块打印 |
-| `src/main/java/jagent/agent/Scorecard.java` | `b61c61e35bc4987e46e8912034429c3c` | 机制对账单 |
-| `src/main/java/jagent/agent/Auction.java` | `654e42bc1829636984ef1309f51a7f43` | 中标计数 |
+| `src/main/java/jagent/agent/Scorecard.java` | `b61c61e35bc4987e46e8912034429c3c` | 对账单 |
+| `src/main/java/jagent/agent/Auction.java` | `654e42bc1829636984ef1309f51a7f43` | 采纳计数 |
 | `src/main/java/jagent/agent/Governor.java` | `7060c09547c2b8be53a629b5e719985d` | 上下调与熔断计数 |
 | `src/main/java/jagent/graph/Admission.java` | `d6824a03d3373d96f0d2f1fea8e1f3f2` | 峰值计数 + 降额非阻塞回收 |
 | `src/main/java/jagent/graph/Scheduler.java` | `1ce080d19d3bc04d916b8c8fa6eef177` | 嵌套许可修复 |

@@ -5,7 +5,7 @@
 [2026-09-19] G1: 口径确认 — 名称 jagent / 纯JDK零依赖 / OpenAI兼容 / MavenWrapper预留native / Java25 / demo 四项全选
 [2026-09-19] env: java 25.0.4 有; mvn 无; curl 有; python 3.14 有; git 2.51 有
 [2026-09-19] env: Maven Central 可达(200); GitHub raw 阻断(000) -> wrapper 从 Central 取
-[2026-09-19] S1: 建轮 — 写任务书，范围见 R1_90; 推迟进化论/native/分层布局/raw-mode 至 R2
+[2026-09-19] S1: 建轮 — 写任务书，范围见 R1_90; 推迟自适应演化/native/分层布局/raw-mode 至 R2
 [2026-09-19] S2/S3: 调研已合并进方案 — ScopedValue(JEP506)已转正可用; StructuredTaskScope 仍 preview 弃用; GraalVM native-maven-plugin 1.1.14
 [2026-09-19] S4/P0: wrapper 引导(only-script, 从 Central 取 Maven 3.9.16); pom(Java25+jar+native profile); Json/Sse/Ansi/Term/Config/Cli/Main
 [2026-09-19] S4/P0: 构建成功 jar 24444B; doctor 实测 stdout 编码=GBK（方案预判风险已现形）
@@ -29,14 +29,14 @@
 [2026-09-19] S5: 累计 P1T 26 + P2T 27 + P3T 32 = 85 断言全绿
 [2026-09-19] S4/P4: core(Health/RunCtx ScopedValue) + agent(Auction/Budget/Governor/SpawnTool) + llm(Router/FallbackClient)
 [2026-09-19] S4/P4: ScopedValue 承载当前节点 — 工具签名仍是 run(args)，SpawnTool 内 RunCtx.current() 即知父节点，无需透传
-[2026-09-19] S4/P4: Auction 密封报价 utility=V·p−cost，按第二高价记账(Vickrey)；rep EMA 0.75/0.25 夹在 [0.2,1.2] 作为 R2 适应度底料
-[2026-09-19] S4/P4: Governor 积分调节 want=round(limit−8·(errEma−target))，死区 0.05；连续 3 次失败跳闸；退避 120ms·2^n 加抖动
+[2026-09-19] S4/P4: Auction 密封报价 utility=V·p−cost，按次高报价记账；rep EMA 0.75/0.25 夹在 [0.2,1.2] 作为 R2 适应度底料
+[2026-09-19] S4/P4: Governor 反馈调节 want=round(limit−8·(errEma−target))，死区 0.05；连续 3 次失败熔断；退避 120ms·2^n 加抖动
 [2026-09-19] S4/P4: Admission 增写路径锁 — write_file/edit_file 按 path 加锁，两个子 agent 写不同文件可并行、写同一文件被串行化
-[2026-09-19] S5/P4: 实测 mock run 两子 agent 在图上并行分叉（各 230ms 重叠），23 节点；竞价 cheap=0.44 strong=0.51 -> strong (pay 0.44, +0.14)
-[2026-09-19] S5/P4: 实测熔断路径 — base_url 指向死端口: err=49% conc=2->1 跳闸，错误文案 "all 2 attempts failed: ConnectException"
+[2026-09-19] S5/P4: 实测 mock run 两子 agent 在图上并行分叉（各 230ms 重叠），23 节点；报价 cheap=0.44 strong=0.51 -> strong (pay 0.44, +0.14)
+[2026-09-19] S5/P4: 实测熔断路径 — base_url 指向死端口: err=49% conc=2->1 熔断，错误文案 "all 2 attempts failed: ConnectException"
 [2026-09-19] BUG/P4: FileTools.resolve 用未归一化的 root 做 startsWith，相对工作根目录下所有路径被判越界；已改 base=root.toAbsolutePath().normalize()
 [2026-09-19] BUG/P4: FileTools.rel 在 root 相对时 relativize 抛 "'other' is different type of Path" — 表现为"文件已写入却返回 error"；已同法归一化
-[2026-09-19] S5/P4: P4T 验证 61/61 — 竞价/Vickrey/声誉夹取/预算账本/控制律与跳闸/价格锁争用/RunCtx 绑定与绑定后释放/子 agent 落盘
+[2026-09-19] S5/P4: P4T 验证 61/61 — 报价/次高报价/成功率夹取/预算记账/闭环调节与熔断/价格锁争用/RunCtx 绑定与绑定后释放/子 agent 落盘
 [2026-09-19] S5: 累计 P1T 26 + P2T 27 + P3T 32 + P4T 61 = 146 断言全绿
 [2026-09-19] S4/P5: mem 包(Tokens 无依赖估算/WorkDir 抽象文件名协议/Memory 事实情节摘要产物/Compressor ROI 判定+定式摘要)
 [2026-09-19] S4/P5: agent/SystemPrompt 分层装配(稳定前缀+goal+memory+node)；tool/MemoryTool(remember/recall/save_artifact/read_artifact) + HumanTool(ask_human 闸门)
@@ -66,7 +66,7 @@
 [2026-09-19] G3 诊断：文档为"选中抄屏"而非重定向 — 无 ESC 字节却残留 1937 处 [0m；live 仪表盘的光标上移/清屏转义在抄写中丢失 -> 217 次重绘全部堆叠(1493 行树) 而非原地刷新
 [2026-09-19] G3 诊断：功能实为成功 — 首跑第 1968 行给出 [步数=4 nodes=26 in=885 out=97 2835ms]；二跑压缩触发(217->33 tok, ROI 2971.9x)；故属"看不了"非"跑不通"
 [2026-09-19] G3 建议：先 chcp 65001(或 Windows Terminal) 再实跑；留档改用重定向(> out.txt 2>&1) — Term.out 恒为 UTF-8，重定向反而干净且自动关仪表盘
-[2026-09-19] G3 实跑(2/2)：切 UTF-8 后复跑，作者确认 — 底部执行图**原地覆盖刷新**(up(n)+clearDown 生效，非滚动追加)；树形连接符 ├─ └─ │ 与状态字形 ○◐●✗ 整齐正常；中英混排宽度对齐无错位；并发/竞价/压缩/续跑均无异常 -> **G3 通过**
+[2026-09-19] G3 实跑(2/2)：切 UTF-8 后复跑，作者确认 — 底部执行图**原地覆盖刷新**(up(n)+clearDown 生效，非滚动追加)；树形连接符 ├─ └─ │ 与状态字形 ○◐●✗ 整齐正常；中英混排宽度对齐无错位；并发/报价/压缩/续跑均无异常 -> **G3 通过**
 [2026-09-19] 结论：首跑乱码纯属终端环境(代码页)问题，产品侧零改动，断言基线 266/266 不受影响
 [2026-09-19] S6 送审对账：宪法 §4 六项交付物全部存在(demo jar / README / PROTOCOL / DEMO / 语言槽位设计 / 启动基准)
 [2026-09-19] G4 拍板：**定稿并只建本地仓库**，明确不推远程；git init 随之执行
